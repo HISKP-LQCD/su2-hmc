@@ -9,4 +9,5 @@ Configuration::Configuration(int const length_space, int const length_time)
       spacing_n3(length_space * spacing_n4),
       spacing_n2(length_space * spacing_n3),
       spacing_n1(length_space * spacing_n2),
-      volume(length_space * length_space * length_space * length_time) {}
+      volume(length_space * length_space * length_space * length_time * 4),
+      data(volume) {}
