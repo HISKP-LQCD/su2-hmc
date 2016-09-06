@@ -20,12 +20,19 @@
   */
 class SU2Matrix {
   public:
-    std::complex<double> operator()(int const row, int const col);
+    using value_type = std::complex<double>;
 
-    SU2Matrix operator+(SU2Matrix const &right);
-    SU2Matrix operator-(SU2Matrix const &right);
-    SU2Matrix operator*(SU2Matrix const &right);
+    SU2Matrix() : a1(value_type{0, 0}), a2(value_type{0, 0}){};
+    SU2Matrix(value_type const &a1, value_type const &a2) : a1(a1), a2(a2){};
+
+    value_type operator()(int const row, int const col) const;
+
+    SU2Matrix operator+(SU2Matrix const &right) const;
+    SU2Matrix operator-(SU2Matrix const &right) const;
+    SU2Matrix operator*(SU2Matrix const &right) const;
 
   private:
-    std::complex<double> a1, a2;
+    value_type a1, a2;
 };
+
+SU2Matrix const unity(SU2Matrix::value_type{1, 0}, SU2Matrix::value_type{0, 0});

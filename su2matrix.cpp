@@ -4,28 +4,28 @@
 
 #include <cassert>
 
-SU2Matrix SU2Matrix::operator+(SU2Matrix const &right) {
+SU2Matrix SU2Matrix::operator+(SU2Matrix const &right) const {
     SU2Matrix result;
     result.a1 = a1 + right.a1;
     result.a2 = a2 + right.a2;
     return result;
 }
 
-SU2Matrix SU2Matrix::operator-(SU2Matrix const &right) {
+SU2Matrix SU2Matrix::operator-(SU2Matrix const &right) const {
     SU2Matrix result;
     result.a1 = a1 - right.a1;
     result.a2 = a2 - right.a2;
     return result;
 }
 
-SU2Matrix SU2Matrix::operator*(SU2Matrix const &right) {
+SU2Matrix SU2Matrix::operator*(SU2Matrix const &right) const {
     SU2Matrix result;
     result.a1 = a1 * right.a1 - std::conj(a2) * right.a2;
     result.a2 = a2 * right.a1 + std::conj(a1) * right.a2;
     return result;
 }
 
-std::complex<double> SU2Matrix::operator()(int const row, int const col) {
+std::complex<double> SU2Matrix::operator()(int const row, int const col) const {
     assert(row == 0 || row == 1);
     assert(col == 0 || col == 1);
 

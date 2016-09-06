@@ -1,6 +1,17 @@
 # Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
 
 cmake_minimum_required(VERSION 3.0)
+
+set(clang_path "/usr/bin/clang++")
+
+if(CMAKE_BUILD_TYPE MATCHES debug AND EXISTS "${clang_path}")
+    set(CMAKE_CXX_COMPILER "${clang_path}")
+else()
+    set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+endif()
+
+message("Using ${CMAKE_CXX_COMPILER}")
+
 project(su2-hmc CXX C)
 
 add_definitions("-march=native")
@@ -32,13 +43,15 @@ else()
     add_definitions("-Wno-unknown-pragmas")
 endif()
 
-#find_package(Eigen3 REQUIRED)
-#include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+find_package(Eigen3 REQUIRED)
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 
 add_executable(su2-hmc
 
     configuration.cpp
+    hybrid-monte-carlo.cpp
     main.cpp
+    pauli-matrices.cpp
     su2matrix.cpp
 
     )
