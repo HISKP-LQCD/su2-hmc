@@ -1,0 +1,7 @@
+.ninja_deps
+.ninja_log
+CMakeFiles/
+build.ninja
+cmake_install.cmake
+rules.ninja
+su2-hmc
