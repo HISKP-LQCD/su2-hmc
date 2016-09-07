@@ -1,5 +1,6 @@
 // Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
 
+
 #include "hybrid-monte-carlo.hpp"
 
 #include "pauli-matrices.hpp"
@@ -141,6 +142,7 @@ Eigen::Matrix2cd get_staples(int const n1,
                              int const mu,
                              Configuration const &links) {
     Eigen::Matrix2cd staples;
+    // XXX Perhaps use std::array here.
     std::vector<int> const old_coords{n1, n2, n3, n4};
     for (int nu = 0; nu < 4; ++nu) {
         if (nu == mu) {

@@ -63,7 +63,10 @@ int main() {
 
     while (configs_stored < chain_total) {
         Configuration const old_links = links;
+
+        // FIXME The standard deviation here should depend on the time step.
         randomize_algebra(momenta, engine, dist);
+
         double const old_energy = get_energy(links, momenta);
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);

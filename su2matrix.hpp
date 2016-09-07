@@ -13,8 +13,8 @@
   \f$ complex numbers:
   \f[
       \begin{pmatrix}
-          a_1 & - a_2^* \\
-          a_2 & a_1^*
+          a_1  - a_2^* \\
+          a_2  a_1^*
       \end{pmatrix} \,.
   \f]
 
