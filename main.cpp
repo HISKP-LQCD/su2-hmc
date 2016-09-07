@@ -27,4 +27,7 @@ int main() {
 
     md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
 
+    std::cout << "Element: ";
+    std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;
+
 }

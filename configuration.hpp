@@ -22,9 +22,9 @@ class Configuration {
 
         // Periodic boundary conditions.
         int const n1_p = (n1 + length_time) % length_time;
-        int const n2_p = (n2 + length_time) % length_time;
-        int const n3_p = (n3 + length_time) % length_time;
-        int const n4_p = (n4 + length_time) % length_time;
+        int const n2_p = (n2 + length_space) % length_space;
+        int const n3_p = (n3 + length_space) % length_space;
+        int const n4_p = (n4 + length_space) % length_space;
 
         assert(0 <= n1_p && n1_p < length_time);
         assert(0 <= n2_p && n2_p < length_space);

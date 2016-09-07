@@ -161,7 +161,7 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
     }
 
     Eigen::Matrix2cd result = -beta / 6 * links(n1, n2, n3, n4, mu) * staples;
-    result -= result.adjoint();
+    result -= result.adjoint().eval();
 
     return result;
 }
