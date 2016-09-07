@@ -15,7 +15,7 @@ Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
                                         dist(engine)};
     auto const pauli_matrices = PauliMatrices::get_instance();
     Eigen::Matrix2cd algebra_element;
-    for (int i = 0; i != 3; ++i) {
+    for (int i = 0; i < 3; ++i) {
         Eigen::Matrix2cd scaled_generator =
             coefficients[i] * pauli_matrices.get(i);
         algebra_element += scaled_generator;
@@ -39,11 +39,11 @@ Configuration make_hot_start(int const length_space,
 void randomize(Configuration &links,
                std::mt19937 &engine,
                std::normal_distribution<double> &dist) {
-    for (int n1 = 0; n1 != links.length_time; ++n1) {
-        for (int n2 = 0; n2 != links.length_space; ++n2) {
-            for (int n3 = 0; n3 != links.length_space; ++n3) {
-                for (int n4 = 0; n4 != links.length_space; ++n4) {
-                    for (int mu = 0; mu != 4; ++mu) {
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
                         links(n1, n2, n3, n4, mu) =
                             generate_from_gaussian(engine, dist);
                     }
@@ -61,11 +61,12 @@ void md_step(Configuration &links,
              double const time_step,
              double const beta) {
     // Update `momenta_half`.
-    for (int n1 = 0; n1 != links.length_time; ++n1) {
-        for (int n2 = 0; n2 != links.length_space; ++n2) {
-            for (int n3 = 0; n3 != links.length_space; ++n3) {
-                for (int n4 = 0; n4 != links.length_space; ++n4) {
-                    for (int mu = 0; mu != 4; ++mu) {
+#pragma omp parallel for
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
                         momenta_half(n1, n2, n3, n4, mu) =
                             compute_new_momentum(n1, n2, n3, n4, mu, links,
                                                  momenta, time_step, beta);
@@ -75,11 +76,12 @@ void md_step(Configuration &links,
         }
     }
     // Update `links`.
-    for (int n1 = 0; n1 != links.length_time; ++n1) {
-        for (int n2 = 0; n2 != links.length_space; ++n2) {
-            for (int n3 = 0; n3 != links.length_space; ++n3) {
-                for (int n4 = 0; n4 != links.length_space; ++n4) {
-                    for (int mu = 0; mu != 4; ++mu) {
+#pragma omp parallel for
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
                         links(n1, n2, n3, n4, mu) =
                             compute_new_link(n1, n2, n3, n4, mu, links,
                                              momenta_half, time_step);
@@ -89,11 +91,12 @@ void md_step(Configuration &links,
         }
     }
     // Update `momenta`.
-    for (int n1 = 0; n1 != links.length_time; ++n1) {
-        for (int n2 = 0; n2 != links.length_space; ++n2) {
-            for (int n3 = 0; n3 != links.length_space; ++n3) {
-                for (int n4 = 0; n4 != links.length_space; ++n4) {
-                    for (int mu = 0; mu != 4; ++mu) {
+#pragma omp parallel for
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
                         momenta(n1, n2, n3, n4, mu) =
                             compute_new_momentum(n1, n2, n3, n4, mu, links,
                                                  momenta_half, time_step, beta);
@@ -128,7 +131,7 @@ Eigen::Matrix2cd get_staples(int const n1,
                              Configuration const &links) {
     Eigen::Matrix2cd staples;
     std::vector<int> const old_coords{n1, n2, n3, n4};
-    for (int nu = 0; nu != 4; ++nu) {
+    for (int nu = 0; nu < 4; ++nu) {
         if (nu == mu) {
             continue;
         }
@@ -207,12 +210,13 @@ Eigen::Matrix2cd get_plaquette(int const n1,
 double get_plaquette_trace_real(Configuration const &links) {
     double sum = 0.0;
 
-    for (int n1 = 0; n1 != links.length_time; ++n1) {
-        for (int n2 = 0; n2 != links.length_space; ++n2) {
-            for (int n3 = 0; n3 != links.length_space; ++n3) {
-                for (int n4 = 0; n4 != links.length_space; ++n4) {
-                    for (int mu = 0; mu != 4; ++mu) {
-                        for (int nu = 0; nu != 4; ++nu) {
+#pragma omp parallel for reduction(+:sum)
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
+                        for (int nu = 0; nu < 4; ++nu) {
                             auto const plaquette =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
                             double const summand = plaquette.trace().real();
@@ -235,11 +239,12 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
 
     double momentum_part = 0.0;
     double momentum_part_imag = 0.0;
-    for (int n1 = 0; n1 != links.length_time; ++n1) {
-        for (int n2 = 0; n2 != links.length_space; ++n2) {
-            for (int n3 = 0; n3 != links.length_space; ++n3) {
-                for (int n4 = 0; n4 != links.length_space; ++n4) {
-                    for (int mu = 0; mu != 4; ++mu) {
+#pragma omp parallel for reduction(+:momentum_part,momentum_part_imag)
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
                         auto const &momentum = momenta(n1, n2, n3, n4, mu);
                         auto const trace = (momentum * momentum).trace();
                         auto const summand = trace.real();
