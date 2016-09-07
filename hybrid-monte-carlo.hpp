@@ -31,8 +31,8 @@ Eigen::Matrix2cd compute_new_momentum(int const n1,
                                            int const n3,
                                            int const n4,
                                            int const mu,
-                                           Configuration &links,
-                                           Configuration &momenta,
+                                           Configuration const &links,
+                                           Configuration const &momenta,
                                            double const time_step,
                                            double const beta);
 
@@ -41,7 +41,7 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
                                              int const n3,
                                              int const n4,
                                              int const mu,
-                                             Configuration &links,
+                                             Configuration const &links,
                                              double const beta);
 
 Eigen::Matrix2cd compute_new_link(int const n1,
@@ -49,6 +49,16 @@ Eigen::Matrix2cd compute_new_link(int const n1,
                                   int const n3,
                                   int const n4,
                                   int const mu,
-                                  Configuration &links,
-                                  Configuration &momenta_half,
+                                  Configuration const &links,
+                                  Configuration const &momenta_half,
                                   double const time_step);
+
+Eigen::Matrix2cd get_plaquette(int const n1,
+                               int const n2,
+                               int const n3,
+                               int const n4,
+                               int const mu,
+                               int const nu,
+                               Configuration const &links);
+
+double get_energy(Configuration const &links, Configuration const &momenta);

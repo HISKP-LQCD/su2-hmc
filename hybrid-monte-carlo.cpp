@@ -40,7 +40,6 @@ void randomize(Configuration &links,
                std::mt19937 &engine,
                std::normal_distribution<double> &dist) {
     for (int n1 = 0; n1 != links.length_time; ++n1) {
-        std::cout << "n1 = " << n1 << std::endl;
         for (int n2 = 0; n2 != links.length_space; ++n2) {
             for (int n3 = 0; n3 != links.length_space; ++n3) {
                 for (int n4 = 0; n4 != links.length_space; ++n4) {
@@ -63,7 +62,6 @@ void md_step(Configuration &links,
              double const beta) {
     // Update `momenta_half`.
     for (int n1 = 0; n1 != links.length_time; ++n1) {
-        std::cout << "n1 = " << n1 << std::endl;
         for (int n2 = 0; n2 != links.length_space; ++n2) {
             for (int n3 = 0; n3 != links.length_space; ++n3) {
                 for (int n4 = 0; n4 != links.length_space; ++n4) {
@@ -78,7 +76,6 @@ void md_step(Configuration &links,
     }
     // Update `links`.
     for (int n1 = 0; n1 != links.length_time; ++n1) {
-        std::cout << "n1 = " << n1 << std::endl;
         for (int n2 = 0; n2 != links.length_space; ++n2) {
             for (int n3 = 0; n3 != links.length_space; ++n3) {
                 for (int n4 = 0; n4 != links.length_space; ++n4) {
@@ -93,7 +90,6 @@ void md_step(Configuration &links,
     }
     // Update `momenta`.
     for (int n1 = 0; n1 != links.length_time; ++n1) {
-        std::cout << "n1 = " << n1 << std::endl;
         for (int n2 = 0; n2 != links.length_space; ++n2) {
             for (int n3 = 0; n3 != links.length_space; ++n3) {
                 for (int n4 = 0; n4 != links.length_space; ++n4) {
@@ -113,8 +109,8 @@ Eigen::Matrix2cd compute_new_momentum(int const n1,
                                            int const n3,
                                            int const n4,
                                            int const mu,
-                                           Configuration &links,
-                                           Configuration &momenta,
+                                           Configuration const &links,
+                                           Configuration const &momenta,
                                            double const time_step,
                                            double const beta) {
     // Copy old momentum.
@@ -129,7 +125,7 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
                                              int const n3,
                                              int const n4,
                                              int const mu,
-                                             Configuration &links,
+                                             Configuration const &links,
                                              double const beta) {
     // Compute staples.
     Eigen::Matrix2cd staples;
@@ -171,11 +167,80 @@ Eigen::Matrix2cd compute_new_link(int const n1,
                                   int const n3,
                                   int const n4,
                                   int const mu,
-                                  Configuration &links,
-                                  Configuration &momenta_half,
+                                  Configuration const &links,
+                                  Configuration const &momenta_half,
                                   double const time_step) {
     auto const exponent = std::complex<double>{0, 1} * time_step *
                           momenta_half(n1, n2, n3, n4, mu);
     auto const rotation = exponent.exp();
     return rotation * links(n1, n2, n3, n4, mu);
+}
+
+Eigen::Matrix2cd get_plaquette(int const n1,
+                               int const n2,
+                               int const n3,
+                               int const n4,
+                               int const mu,
+                               int const nu,
+                               Configuration const &links) {
+    std::vector<int> coords{n1, n2, n3, n4};
+
+    auto &link1 = links(coords, mu);
+    auto &link4 = links(coords, nu);
+    ++coords[mu];
+    auto &link2 = links(coords, nu);
+    --coords[mu];
+    ++coords[nu];
+    auto &link3 = links(coords, mu);
+
+    return link1 * link2 * link3.adjoint() * link4.adjoint();
+}
+
+double get_energy(Configuration const &links, Configuration const &momenta) {
+    double links_part = 0.0;
+
+    for (int n1 = 0; n1 != links.length_time; ++n1) {
+        for (int n2 = 0; n2 != links.length_space; ++n2) {
+            for (int n3 = 0; n3 != links.length_space; ++n3) {
+                for (int n4 = 0; n4 != links.length_space; ++n4) {
+                    for (int mu = 0; mu != 4; ++mu) {
+                        for (int nu = 0; nu != 4; ++nu) {
+                            auto const plaquette =
+                                get_plaquette(n1, n2, n3, n4, mu, nu, links);
+                            // XXX One could probably get around the adjoint by
+                            // using the complex conjudated of the trace. Or
+                            // directly use the real part only. That's probably
+                            // simplest.
+                            double const real = plaquette.trace().real();
+                            double const summand = 1 - 0.5 * real;
+                            assert(std::isfinite(summand));
+                            links_part += summand;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    double momentum_part = 0.0;
+
+    for (int n1 = 0; n1 != links.length_time; ++n1) {
+        for (int n2 = 0; n2 != links.length_space; ++n2) {
+            for (int n3 = 0; n3 != links.length_space; ++n3) {
+                for (int n4 = 0; n4 != links.length_space; ++n4) {
+                    for (int mu = 0; mu != 4; ++mu) {
+                        auto const &momentum = momenta(n1, n2, n3, n4, mu);
+                        auto const trace = (momentum * momentum).trace();
+                        auto const summand = trace.real();
+                        assert(std::isfinite(summand));
+                        momentum_part += summand;
+                        // TODO Check that trace.imag() really is zero.
+                    }
+                }
+            }
+        }
+    }
+
+    // TODO Include $g_\text s$ and $\beta$ here?
+    return links_part + 0.5 * momentum_part;
 }
