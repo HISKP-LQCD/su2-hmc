@@ -18,7 +18,11 @@ add_definitions("-march=native")
 add_definitions("-std=c++11")
 #add_definitions("-Werror")
 add_definitions("-Wall")
-add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
+#add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
+
+###############################################################################
+#                                Compile flags                                #
+###############################################################################
 
 if(CMAKE_BUILD_TYPE MATCHES release)
     add_definitions("-Werror")
@@ -35,6 +39,10 @@ if(has_W_documentation)
     add_definitions("-Wdocumentation")
 endif()
 
+###############################################################################
+#                                  Libraries                                  #
+###############################################################################
+
 find_package(OpenMP)
 if(OPENMP_FOUND AND CMAKE_BUILD_TYPE MATCHES release)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -43,8 +51,14 @@ else()
     add_definitions("-Wno-unknown-pragmas")
 endif()
 
+find_package(Boost REQUIRED COMPONENTS)
+
 find_package(Eigen3 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+
+###############################################################################
+#                                 Executables                                 #
+###############################################################################
 
 add_executable(su2-hmc
 
@@ -56,4 +70,4 @@ add_executable(su2-hmc
 
     )
 
-#target_link_libraries(su2-hmc)
+target_link_libraries(su2-hmc ${Boost_LIBS})

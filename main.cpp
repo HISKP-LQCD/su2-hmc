@@ -2,12 +2,26 @@
 
 #include "hybrid-monte-carlo.hpp"
 
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
 #include <iostream>
 #include <random>
+
+namespace ptree = boost::property_tree;
 
 int main() {
     std::mt19937 engine;
     std::normal_distribution<double> dist(0, 1);
+
+    ptree::ptree config;
+    try {
+    ptree::read_ini("hmc.ini", config);
+    }
+    catch (ptree::ini_parser::ini_parser_error e) {
+        std::cerr << e.what() << std::endl;
+        abort();
+    }
 
     std::cout << "Start" << std::endl;
 
