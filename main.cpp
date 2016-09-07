@@ -2,6 +2,7 @@
 
 #include "hybrid-monte-carlo.hpp"
 
+#include <boost/format.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -13,6 +14,11 @@ namespace ptree = boost::property_tree;
 int main() {
     std::mt19937 engine;
     std::normal_distribution<double> dist(0, 1);
+
+    std::cout << "sizeof(value_type): " << sizeof(Configuration::value_type)
+              << std::endl;
+
+    boost::format config_filename_format("gauge-links-%04d.bin");
 
     ptree::ptree config;
     try {
@@ -34,13 +40,36 @@ int main() {
     std::cout << "Element: ";
     std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;
 
-    auto momenta = make_hot_start(length_space, length_time, 1, 0);
-    auto momenta_half = make_hot_start(length_space, length_time, 1, 0);
-
     const double time_step = config.get<double>("md.time_step");
     const double beta = config.get<double>("md.beta");
 
-    md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
+    const int chain_total = config.get<int>("chain.total");
+    const int chain_skip = config.get<int>("chain.skip");
+    const int md_steps = config.get<int>("md.steps");
+
+    Configuration momenta(length_space, length_time);
+    Configuration momenta_half(length_space, length_time);
+
+    int configs_stored = 0;
+    int configs_computed = 0;
+
+    while (configs_stored < chain_total) {
+        randomize(momenta, engine, dist);
+        for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
+            md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
+        }
+
+        // TODO Accept-Reject.
+
+        ++configs_computed;
+
+        if (chain_skip == 0 || configs_computed % chain_skip == 0) {
+            std::string filename = (config_filename_format % configs_stored).str();
+            links.save(filename);
+            ++configs_stored;
+        }
+    }
+
 
     std::cout << "Element: ";
     std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;

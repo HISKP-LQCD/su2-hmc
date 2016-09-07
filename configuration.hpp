@@ -8,9 +8,9 @@
 #include <vector>
 
 class Configuration {
+  public:
     using value_type = Eigen::Matrix2cd;
 
-  public:
     Configuration(int const length_space, int const length_time);
 
     value_type &operator()(
