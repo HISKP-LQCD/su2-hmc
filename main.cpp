@@ -14,6 +14,7 @@ namespace ptree = boost::property_tree;
 int main() {
     std::mt19937 engine;
     std::normal_distribution<double> dist(0, 1);
+    std::uniform_real_distribution<double> uniform(0, 1);
 
     std::cout << "sizeof(value_type): " << sizeof(Configuration::value_type)
               << std::endl;
@@ -53,6 +54,9 @@ int main() {
     int configs_stored = 0;
     int configs_computed = 0;
 
+    std::ofstream ofs_energy("energy.tsv");
+    std::ofstream ofs_plaquette("plaquette-trace-real.tsv");
+
     while (configs_stored < chain_total) {
         Configuration const old_links = links;
         randomize(momenta, engine, dist);
@@ -60,18 +64,33 @@ int main() {
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
         }
+
         double const new_energy = get_energy(links, momenta);
+        double const energy_difference = new_energy - old_energy;
+        std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference << std::endl;
 
-        std::cout << old_energy << "\t" << new_energy << std::endl;
 
-        // TODO Accept-Reject.
+        // Accept-Reject.
+        if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
+            std::cout << "Accepted." << std::endl;
 
-        ++configs_computed;
+            const double average_plaquette =
+                get_plaquette_trace_real(links) / links.get_volume();
 
-        if (chain_skip == 0 || configs_computed % chain_skip == 0) {
-            std::string filename = (config_filename_format % configs_stored).str();
-            links.save(filename);
-            ++configs_stored;
+            ofs_energy << configs_computed << "\t" << new_energy << std::endl;
+            ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
+
+            ++configs_computed;
+
+            if (chain_skip == 0 || configs_computed % chain_skip == 0) {
+                std::string filename =
+                    (config_filename_format % configs_stored).str();
+                links.save(filename);
+                ++configs_stored;
+            }
+        } else {
+            std::cout << "Rejected." << std::endl;
+            links = old_links;
         }
     }
 

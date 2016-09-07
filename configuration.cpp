@@ -15,7 +15,7 @@ Configuration::Configuration(int const length_space, int const length_time)
       volume(length_space * length_space * length_space * length_time * 4),
       data(volume) {}
 
-void Configuration::save(std::string const &path) {
+void Configuration::save(std::string const &path) const {
     std::ofstream os(path, std::ios::out | std::ios::binary);
-    os.write(reinterpret_cast<char *>(data.data()), storage_size());
+    os.write(reinterpret_cast<char const *>(data.data()), storage_size());
 }

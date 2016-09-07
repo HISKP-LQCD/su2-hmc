@@ -196,8 +196,8 @@ Eigen::Matrix2cd get_plaquette(int const n1,
     return link1 * link2 * link3.adjoint() * link4.adjoint();
 }
 
-double get_energy(Configuration const &links, Configuration const &momenta) {
-    double links_part = 0.0;
+double get_plaquette_trace_real(Configuration const &links) {
+    double sum = 0.0;
 
     for (int n1 = 0; n1 != links.length_time; ++n1) {
         for (int n2 = 0; n2 != links.length_space; ++n2) {
@@ -207,14 +207,9 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
                         for (int nu = 0; nu != 4; ++nu) {
                             auto const plaquette =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
-                            // XXX One could probably get around the adjoint by
-                            // using the complex conjudated of the trace. Or
-                            // directly use the real part only. That's probably
-                            // simplest.
-                            double const real = plaquette.trace().real();
-                            double const summand = 1 - 0.5 * real;
+                            double const summand = plaquette.trace().real();
                             assert(std::isfinite(summand));
-                            links_part += summand;
+                            sum += summand;
                         }
                     }
                 }
@@ -222,8 +217,15 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
         }
     }
 
-    double momentum_part = 0.0;
+    return sum;
+}
 
+double get_energy(Configuration const &links, Configuration const &momenta) {
+    double links_part = 0.0;
+    links_part += links.get_volume() * 4 * 4;
+    links_part -= get_plaquette_trace_real(links);
+
+    double momentum_part = 0.0;
     for (int n1 = 0; n1 != links.length_time; ++n1) {
         for (int n2 = 0; n2 != links.length_space; ++n2) {
             for (int n3 = 0; n3 != links.length_space; ++n3) {

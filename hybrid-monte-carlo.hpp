@@ -61,4 +61,6 @@ Eigen::Matrix2cd get_plaquette(int const n1,
                                int const nu,
                                Configuration const &links);
 
+double get_plaquette_trace_real(Configuration const &links);
+
 double get_energy(Configuration const &links, Configuration const &momenta);
