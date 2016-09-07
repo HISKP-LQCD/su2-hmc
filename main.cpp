@@ -57,6 +57,9 @@ int main() {
     std::ofstream ofs_energy("energy.tsv");
     std::ofstream ofs_plaquette("plaquette-trace-real.tsv");
 
+    int accepted = 0;
+    int trials = 0;
+
     while (configs_stored < chain_total) {
         Configuration const old_links = links;
         randomize(momenta, engine, dist);
@@ -67,12 +70,12 @@ int main() {
 
         double const new_energy = get_energy(links, momenta);
         double const energy_difference = new_energy - old_energy;
-        std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference << std::endl;
 
+        std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference;
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
-            std::cout << "Accepted." << std::endl;
+            std::cout << "\tAccepted." << std::endl;
 
             const double average_plaquette =
                 get_plaquette_trace_real(links) / links.get_volume();
@@ -81,6 +84,7 @@ int main() {
             ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
 
             ++configs_computed;
+            ++accepted;
 
             if (chain_skip == 0 || configs_computed % chain_skip == 0) {
                 std::string filename =
@@ -89,9 +93,16 @@ int main() {
                 ++configs_stored;
             }
         } else {
-            std::cout << "Rejected." << std::endl;
+            std::cout << "\tRejected." << std::endl;
             links = old_links;
         }
+
+        auto const acceptance_rate = static_cast<double>(accepted) / trials;
+
+        std::cout << "Acceptance rate: " << accepted << " / " << trials << " = "
+                  << acceptance_rate << std::endl;
+
+        ++trials;
     }
 
 

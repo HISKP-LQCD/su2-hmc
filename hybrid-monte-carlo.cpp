@@ -120,14 +120,12 @@ Eigen::Matrix2cd compute_new_momentum(int const n1,
     return result;
 }
 
-Eigen::Matrix2cd compute_momentum_derivative(int const n1,
-                                             int const n2,
-                                             int const n3,
-                                             int const n4,
-                                             int const mu,
-                                             Configuration const &links,
-                                             double const beta) {
-    // Compute staples.
+Eigen::Matrix2cd get_staples(int const n1,
+                             int const n2,
+                             int const n3,
+                             int const n4,
+                             int const mu,
+                             Configuration const &links) {
     Eigen::Matrix2cd staples;
     std::vector<int> const old_coords{n1, n2, n3, n4};
     for (int nu = 0; nu != 4; ++nu) {
@@ -155,11 +153,21 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
 
         staples += link4 * link5.adjoint() * link6.adjoint();
     }
+    return staples;
+}
 
-    Eigen::Matrix2cd result = -beta / 6 * links(n1, n2, n3, n4, mu) * staples;
+Eigen::Matrix2cd compute_momentum_derivative(int const n1,
+                                             int const n2,
+                                             int const n3,
+                                             int const n4,
+                                             int const mu,
+                                             Configuration const &links,
+                                             double const beta) {
+    auto staples = get_staples(n1, n2, n3, n4, mu, links);
+    Eigen::Matrix2cd result = links(n1, n2, n3, n4, mu) * staples;
     result -= result.adjoint().eval();
 
-    return result;
+    return std::complex<double>{0, 1} * beta / 6.0 * result;
 }
 
 Eigen::Matrix2cd compute_new_link(int const n1,
@@ -226,6 +234,7 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
     links_part -= get_plaquette_trace_real(links);
 
     double momentum_part = 0.0;
+    double momentum_part_imag = 0.0;
     for (int n1 = 0; n1 != links.length_time; ++n1) {
         for (int n2 = 0; n2 != links.length_space; ++n2) {
             for (int n3 = 0; n3 != links.length_space; ++n3) {
@@ -236,12 +245,16 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
                         auto const summand = trace.real();
                         assert(std::isfinite(summand));
                         momentum_part += summand;
+                        momentum_part_imag += trace.imag();
                         // TODO Check that trace.imag() really is zero.
                     }
                 }
             }
         }
     }
+
+    std::cout << "Momentum: " << momentum_part << "\t" << momentum_part_imag
+              << std::endl;
 
     // TODO Include $g_\text s$ and $\beta$ here?
     return links_part + 0.5 * momentum_part;
