@@ -32,11 +32,11 @@ Configuration make_hot_start(int const length_space,
     std::normal_distribution<double> dist(0, std);
 
     Configuration links(length_space, length_time);
-    randomize(links, engine, dist);
+    randomize_group(links, engine, dist);
     return links;
 }
 
-void randomize(Configuration &links,
+void randomize_algebra(Configuration &links,
                std::mt19937 &engine,
                std::normal_distribution<double> &dist) {
     for (int n1 = 0; n1 < links.length_time; ++n1) {
@@ -46,6 +46,23 @@ void randomize(Configuration &links,
                     for (int mu = 0; mu < 4; ++mu) {
                         links(n1, n2, n3, n4, mu) =
                             generate_from_gaussian(engine, dist);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void randomize_group(Configuration &links,
+               std::mt19937 &engine,
+               std::normal_distribution<double> &dist) {
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
+                        links(n1, n2, n3, n4, mu) =
+                            generate_from_gaussian(engine, dist).exp();
                     }
                 }
             }

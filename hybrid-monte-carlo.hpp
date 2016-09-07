@@ -14,9 +14,13 @@ Configuration make_hot_start(int const length_space,
                              double const std,
                              int const seed);
 
-void randomize(Configuration &configuration,
-               std::mt19937 &engine,
-               std::normal_distribution<double> &dist);
+void randomize_algebra(Configuration &configuration,
+                       std::mt19937 &engine,
+                       std::normal_distribution<double> &dist);
+
+void randomize_group(Configuration &configuration,
+                     std::mt19937 &engine,
+                     std::normal_distribution<double> &dist);
 
 void md_step(Configuration &links,
              Configuration &momenta,
