@@ -76,15 +76,16 @@ int main() {
         std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference;
 
             const double average_plaquette =
-                get_plaquette_trace_real(links) / links.get_volume();
+                get_plaquette_trace_real(links) / (links.get_volume() * 4);
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
             std::cout << "\tAccepted." << std::endl;
 
-
-            ofs_energy << configs_computed << "\t" << new_energy << std::endl;
-            ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
+            ofs_energy << configs_computed << "\t"
+                       << (new_energy / links.get_volume()) << std::endl;
+            ofs_plaquette << configs_computed << "\t" << average_plaquette
+                          << std::endl;
 
             ++configs_computed;
             ++accepted;
@@ -99,8 +100,10 @@ int main() {
             std::cout << "\tRejected." << std::endl;
             links = old_links;
 
-            ofs_energy_reject << configs_computed << "\t" << new_energy << std::endl;
-            ofs_plaquette_reject << configs_computed << "\t" << average_plaquette << std::endl;
+            ofs_energy_reject << configs_computed << "\t"
+                              << (new_energy / links.get_volume()) << std::endl;
+            ofs_plaquette_reject << configs_computed << "\t"
+                                 << average_plaquette << std::endl;
         }
 
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
