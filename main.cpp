@@ -38,8 +38,8 @@ int main() {
                                 config.get<double>("init.hot_start_std"),
                                 config.get<int>("init.seed"));
 
-    std::cout << "Element: ";
-    std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;
+    std::cout << "Element:\n";
+    std::cout << links(0, 0, 0, 0, 0) << std::endl;
 
     const double time_step = config.get<double>("md.time_step");
     const double beta = config.get<double>("md.beta");
