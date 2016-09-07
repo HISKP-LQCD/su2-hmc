@@ -31,14 +31,14 @@ void md_step(Configuration &links,
              double const beta);
 
 Eigen::Matrix2cd compute_new_momentum(int const n1,
-                                           int const n2,
-                                           int const n3,
-                                           int const n4,
-                                           int const mu,
-                                           Configuration const &links,
-                                           Configuration const &momenta,
-                                           double const time_step,
-                                           double const beta);
+                                      int const n2,
+                                      int const n3,
+                                      int const n4,
+                                      int const mu,
+                                      Configuration const &links,
+                                      Configuration const &momenta,
+                                      double const time_step,
+                                      double const beta);
 
 Eigen::Matrix2cd get_staples(int const n1,
                              int const n2,
