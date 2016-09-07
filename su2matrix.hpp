@@ -37,6 +37,7 @@ class SU2Matrix {
     value_type a1, a2;
 };
 
+SU2Matrix const zero(SU2Matrix::value_type{0, 0}, SU2Matrix::value_type{0, 0});
 SU2Matrix const unity(SU2Matrix::value_type{1, 0}, SU2Matrix::value_type{0, 0});
 
 SU2Matrix make_su2matrix(Eigen::Matrix2cd const &mat);
