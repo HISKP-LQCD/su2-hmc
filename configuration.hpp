@@ -13,8 +13,8 @@ class Configuration {
 
     Configuration(int const length_space, int const length_time);
 
-    value_type &operator()(
-        int const n1, int const n2, int const n3, int const n4, int const mu) {
+    value_type &
+    operator()(int const n1, int const n2, int const n3, int const n4, int const mu) {
         return data[get_index(n1, n2, n3, n4, mu)];
     }
 
@@ -45,7 +45,8 @@ class Configuration {
 
     std::vector<value_type> data;
 
-    size_t get_index(int const n1, int const n2, int const n3, int const n4, int const mu) const {
+    size_t get_index(
+        int const n1, int const n2, int const n3, int const n4, int const mu) const {
         assert(-1 <= n1 && n1 <= length_time);
         assert(-1 <= n2 && n2 <= length_space);
         assert(-1 <= n3 && n3 <= length_space);
@@ -62,8 +63,8 @@ class Configuration {
         assert(0 <= n3_p && n3_p < length_space);
         assert(0 <= n4_p && n4_p < length_space);
 
-        int const index = n1_p * spacing_n1 + n2_p * spacing_n2 +
-                          n3_p * spacing_n3 + n4_p * spacing_n4 + mu;
+        int const index = n1_p * spacing_n1 + n2_p * spacing_n2 + n3_p * spacing_n3 +
+                          n4_p * spacing_n4 + mu;
 
         assert(0 <= index && index < volume);
 

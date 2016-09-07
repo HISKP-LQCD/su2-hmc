@@ -7,7 +7,7 @@
 #include <random>
 
 Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
-                                 std::normal_distribution<double> &dist);
+                                        std::normal_distribution<double> &dist);
 
 Configuration make_hot_start(int const length_space,
                              int const length_time,

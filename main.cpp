@@ -16,8 +16,7 @@ int main() {
     std::normal_distribution<double> dist(0, 1);
     std::uniform_real_distribution<double> uniform(0, 1);
 
-    std::cout << "sizeof(value_type): " << sizeof(Configuration::value_type)
-              << std::endl;
+    std::cout << "sizeof(value_type): " << sizeof(Configuration::value_type) << std::endl;
 
     boost::format config_filename_format("gauge-links-%04d.bin");
 
@@ -75,24 +74,22 @@ int main() {
 
         std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference;
 
-            const double average_plaquette =
-                get_plaquette_trace_real(links) / (links.get_volume() * 4);
+        const double average_plaquette =
+            get_plaquette_trace_real(links) / (links.get_volume() * 4);
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
             std::cout << "\tAccepted." << std::endl;
 
-            ofs_energy << configs_computed << "\t"
-                       << (new_energy / links.get_volume()) << std::endl;
-            ofs_plaquette << configs_computed << "\t" << average_plaquette
-                          << std::endl;
+            ofs_energy << configs_computed << "\t" << (new_energy / links.get_volume())
+                       << std::endl;
+            ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
 
             ++configs_computed;
             ++accepted;
 
             if (chain_skip == 0 || configs_computed % chain_skip == 0) {
-                std::string filename =
-                    (config_filename_format % configs_stored).str();
+                std::string filename = (config_filename_format % configs_stored).str();
                 links.save(filename);
                 ++configs_stored;
             }
@@ -102,8 +99,8 @@ int main() {
 
             ofs_energy_reject << configs_computed << "\t"
                               << (new_energy / links.get_volume()) << std::endl;
-            ofs_plaquette_reject << configs_computed << "\t"
-                                 << average_plaquette << std::endl;
+            ofs_plaquette_reject << configs_computed << "\t" << average_plaquette
+                                 << std::endl;
         }
 
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
@@ -113,7 +110,6 @@ int main() {
 
         ++trials;
     }
-
 
     std::cout << "Element: ";
     std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;

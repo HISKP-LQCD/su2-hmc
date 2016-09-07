@@ -10,14 +10,12 @@
 #include <random>
 
 Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
-                                 std::normal_distribution<double> &dist) {
-    std::vector<double> coefficients = {dist(engine), dist(engine),
-                                        dist(engine)};
+                                        std::normal_distribution<double> &dist) {
+    std::vector<double> coefficients = {dist(engine), dist(engine), dist(engine)};
     auto const pauli_matrices = PauliMatrices::get_instance();
     Eigen::Matrix2cd algebra_element;
     for (int i = 0; i < 3; ++i) {
-        Eigen::Matrix2cd scaled_generator =
-            coefficients[i] * pauli_matrices.get(i);
+        Eigen::Matrix2cd scaled_generator = coefficients[i] * pauli_matrices.get(i);
         algebra_element += scaled_generator;
     }
 
@@ -37,15 +35,14 @@ Configuration make_hot_start(int const length_space,
 }
 
 void randomize_algebra(Configuration &links,
-               std::mt19937 &engine,
-               std::normal_distribution<double> &dist) {
+                       std::mt19937 &engine,
+                       std::normal_distribution<double> &dist) {
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        links(n1, n2, n3, n4, mu) =
-                            generate_from_gaussian(engine, dist);
+                        links(n1, n2, n3, n4, mu) = generate_from_gaussian(engine, dist);
                     }
                 }
             }
@@ -54,8 +51,8 @@ void randomize_algebra(Configuration &links,
 }
 
 void randomize_group(Configuration &links,
-               std::mt19937 &engine,
-               std::normal_distribution<double> &dist) {
+                     std::mt19937 &engine,
+                     std::normal_distribution<double> &dist) {
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -77,46 +74,43 @@ void md_step(Configuration &links,
              std::normal_distribution<double> &dist,
              double const time_step,
              double const beta) {
-    // Update `momenta_half`.
+// Update `momenta_half`.
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        momenta_half(n1, n2, n3, n4, mu) =
-                            compute_new_momentum(n1, n2, n3, n4, mu, links,
-                                                 momenta, time_step, beta);
+                        momenta_half(n1, n2, n3, n4, mu) = compute_new_momentum(
+                            n1, n2, n3, n4, mu, links, momenta, time_step, beta);
                     }
                 }
             }
         }
     }
-    // Update `links`.
+// Update `links`.
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        links(n1, n2, n3, n4, mu) =
-                            compute_new_link(n1, n2, n3, n4, mu, links,
-                                             momenta_half, time_step);
+                        links(n1, n2, n3, n4, mu) = compute_new_link(
+                            n1, n2, n3, n4, mu, links, momenta_half, time_step);
                     }
                 }
             }
         }
     }
-    // Update `momenta`.
+// Update `momenta`.
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        momenta(n1, n2, n3, n4, mu) =
-                            compute_new_momentum(n1, n2, n3, n4, mu, links,
-                                                 momenta_half, time_step, beta);
+                        momenta(n1, n2, n3, n4, mu) = compute_new_momentum(
+                            n1, n2, n3, n4, mu, links, momenta_half, time_step, beta);
                     }
                 }
             }
@@ -125,18 +119,18 @@ void md_step(Configuration &links,
 }
 
 Eigen::Matrix2cd compute_new_momentum(int const n1,
-                                           int const n2,
-                                           int const n3,
-                                           int const n4,
-                                           int const mu,
-                                           Configuration const &links,
-                                           Configuration const &momenta,
-                                           double const time_step,
-                                           double const beta) {
+                                      int const n2,
+                                      int const n3,
+                                      int const n4,
+                                      int const mu,
+                                      Configuration const &links,
+                                      Configuration const &momenta,
+                                      double const time_step,
+                                      double const beta) {
     // Copy old momentum.
     Eigen::Matrix2cd result = momenta(n1, n2, n3, n4, mu);
-    result += time_step / 2 *
-              compute_momentum_derivative(n1, n2, n3, n4, mu, links, beta);
+    result +=
+        time_step / 2 * compute_momentum_derivative(n1, n2, n3, n4, mu, links, beta);
     return result;
 }
 
@@ -198,8 +192,8 @@ Eigen::Matrix2cd compute_new_link(int const n1,
                                   Configuration const &links,
                                   Configuration const &momenta_half,
                                   double const time_step) {
-    auto const exponent = std::complex<double>{0, 1} * time_step *
-                          momenta_half(n1, n2, n3, n4, mu);
+    auto const exponent =
+        std::complex<double>{0, 1} * time_step * momenta_half(n1, n2, n3, n4, mu);
     auto const rotation = exponent.exp();
     return rotation * links(n1, n2, n3, n4, mu);
 }
@@ -227,7 +221,7 @@ Eigen::Matrix2cd get_plaquette(int const n1,
 double get_plaquette_trace_real(Configuration const &links) {
     double sum = 0.0;
 
-#pragma omp parallel for reduction(+:sum)
+#pragma omp parallel for reduction(+ : sum)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -256,7 +250,7 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
 
     double momentum_part = 0.0;
     double momentum_part_imag = 0.0;
-#pragma omp parallel for reduction(+:momentum_part,momentum_part_imag)
+#pragma omp parallel for reduction(+ : momentum_part, momentum_part_imag)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -275,8 +269,7 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
         }
     }
 
-    std::cout << "Momentum: " << momentum_part << "\t" << momentum_part_imag
-              << std::endl;
+    std::cout << "Momentum: " << momentum_part << "\t" << momentum_part_imag << std::endl;
 
     // TODO Include $g_\text s$ and $\beta$ here?
     return links_part + 0.5 * momentum_part;
