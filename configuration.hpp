@@ -45,6 +45,10 @@ class Configuration {
 
     int const length_space, length_time;
 
+    size_t storage_size() { return data.size() * sizeof(value_type); };
+
+    void save(std::string const &path);
+
   private:
     int const spacing_n4, spacing_n3, spacing_n2, spacing_n1;
     int const volume;

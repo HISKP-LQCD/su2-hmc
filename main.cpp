@@ -16,19 +16,20 @@ int main() {
 
     ptree::ptree config;
     try {
-    ptree::read_ini("hmc.ini", config);
-    }
-    catch (ptree::ini_parser::ini_parser_error e) {
+        ptree::read_ini("hmc.ini", config);
+    } catch (ptree::ini_parser::ini_parser_error e) {
         std::cerr << e.what() << std::endl;
         abort();
     }
 
     std::cout << "Start" << std::endl;
 
-    int const length_time = 10;
-    int const length_space = 5;
+    int const length_time = config.get<int>("lattice.length_time");
+    int const length_space = config.get<int>("lattice.length_space");
 
-    auto links = make_hot_start(length_space, length_time, 1, 0);
+    auto links = make_hot_start(length_space, length_time,
+                                config.get<double>("init.hot_start_std"),
+                                config.get<int>("init.seed"));
 
     std::cout << "Element: ";
     std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;
@@ -36,12 +37,13 @@ int main() {
     auto momenta = make_hot_start(length_space, length_time, 1, 0);
     auto momenta_half = make_hot_start(length_space, length_time, 1, 0);
 
-    const double time_step = 0.1;
-    const double beta = 1.0;
+    const double time_step = config.get<double>("md.time_step");
+    const double beta = config.get<double>("md.beta");
 
     md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
 
     std::cout << "Element: ";
     std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;
 
+    links.save("links.bin");
 }
