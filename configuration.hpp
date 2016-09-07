@@ -42,10 +42,11 @@ class Configuration {
           return data[index];
         }
 
-    private:
-        int length_space, length_time;
-        int spacing_n4, spacing_n3, spacing_n2, spacing_n1;
-        int volume;
+        int const length_space, length_time;
 
-        std::vector<value_type> data;
+    private:
+      int const spacing_n4, spacing_n3, spacing_n2, spacing_n1;
+      int const volume;
+
+      std::vector<value_type> data;
 };

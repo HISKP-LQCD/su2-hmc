@@ -25,8 +25,7 @@ SU2Matrix generate_from_gaussian(std::mt19937 &engine,
 
     Eigen::Matrix2cd const exponentiated = algebra_element.exp();
 
-    const SU2Matrix result(exponentiated(0, 0), exponentiated(1, 0));
-    return result;
+    return make_su2matrix(exponentiated);
 }
 
 Configuration make_hot_start(int const length_space,
@@ -37,12 +36,18 @@ Configuration make_hot_start(int const length_space,
     std::normal_distribution<double> dist(0, std);
 
     Configuration links(length_space, length_time);
+    randomize(links, engine, dist);
+    return links;
+}
 
-    for (int n1 = 0; n1 != length_time; ++n1) {
+void randomize(Configuration &links,
+               std::mt19937 &engine,
+               std::normal_distribution<double> &dist) {
+    for (int n1 = 0; n1 != links.length_time; ++n1) {
         std::cout << "n1 = " << n1 << std::endl;
-        for (int n2 = 0; n2 != length_space; ++n2) {
-            for (int n3 = 0; n3 != length_space; ++n3) {
-                for (int n4 = 0; n4 != length_space; ++n4) {
+        for (int n2 = 0; n2 != links.length_space; ++n2) {
+            for (int n3 = 0; n3 != links.length_space; ++n3) {
+                for (int n4 = 0; n4 != links.length_space; ++n4) {
                     for (int mu = 0; mu != 4; ++mu) {
                         links(n1, n2, n3, n4, mu) =
                             generate_from_gaussian(engine, dist);
@@ -51,6 +56,53 @@ Configuration make_hot_start(int const length_space,
             }
         }
     }
+}
 
-    return links;
+void md_step(Configuration &links,
+             Configuration &momenta,
+             Configuration &momenta_half,
+             std::mt19937 &engine,
+             std::normal_distribution<double> &dist) {
+    // Update `momenta_half`.
+    for (int n1 = 0; n1 != links.length_time; ++n1) {
+        std::cout << "n1 = " << n1 << std::endl;
+        for (int n2 = 0; n2 != links.length_space; ++n2) {
+            for (int n3 = 0; n3 != links.length_space; ++n3) {
+                for (int n4 = 0; n4 != links.length_space; ++n4) {
+                    for (int mu = 0; mu != 4; ++mu) {
+                        momenta_half(n1, n2, n3, n4, mu) =
+                            compute_new_momentum_half(n1, n2, n3, n4, mu, links, momenta)
+                    }
+                }
+            }
+        }
+    }
+    // Update `links`.
+    for (int n1 = 0; n1 != links.length_time; ++n1) {
+        std::cout << "n1 = " << n1 << std::endl;
+        for (int n2 = 0; n2 != links.length_space; ++n2) {
+            for (int n3 = 0; n3 != links.length_space; ++n3) {
+                for (int n4 = 0; n4 != links.length_space; ++n4) {
+                    for (int mu = 0; mu != 4; ++mu) {
+                        links(n1, n2, n3, n4, mu) =
+                            compute_new_link(n1, n2, n3, n4, mu, links, momenta)
+                    }
+                }
+            }
+        }
+    }
+    // Update `momenta`.
+    for (int n1 = 0; n1 != links.length_time; ++n1) {
+        std::cout << "n1 = " << n1 << std::endl;
+        for (int n2 = 0; n2 != links.length_space; ++n2) {
+            for (int n3 = 0; n3 != links.length_space; ++n3) {
+                for (int n4 = 0; n4 != links.length_space; ++n4) {
+                    for (int mu = 0; mu != 4; ++mu) {
+                        momenta(n1, n2, n3, n4, mu) =
+                            compute_momentum_half(n1, n2, n3, n4, mu, links, momenta)
+                    }
+                }
+            }
+        }
+    }
 }

@@ -13,3 +13,7 @@ Configuration make_hot_start(int const length_space,
                              int const length_time,
                              double const std,
                              int const seed);
+
+void randomize(Configuration &configuration,
+               std::mt19937 &engine,
+               std::normal_distribution<double> &dist);

@@ -2,6 +2,8 @@
 
 #include "su2matrix.hpp"
 
+#include <unsupported/Eigen/MatrixFunctions>
+
 #include <cassert>
 
 SU2Matrix SU2Matrix::operator+(SU2Matrix const &right) const {
@@ -37,4 +39,18 @@ std::complex<double> SU2Matrix::operator()(int const row, int const col) const {
         return a2;
     else
         return std::conj(a1);
+}
+
+SU2Matrix make_su2matrix(Eigen::Matrix2cd const &mat) {
+    return {mat(0, 0), mat(1, 0)};
+}
+
+Eigen::Matrix2cd make_eigen(SU2Matrix const &mat) {
+    Eigen::Matrix2cd out;
+    out << mat(0, 0), mat(0, 1), mat(1, 0), mat(0, 1);
+    return out;
+}
+
+SU2Matrix exp(SU2Matrix const &mat) {
+    return make_su2matrix(make_eigen(mat).exp());
 }

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <unsupported/Eigen/MatrixFunctions>
+
 #include <complex>
 
 /**
@@ -36,3 +38,9 @@ class SU2Matrix {
 };
 
 SU2Matrix const unity(SU2Matrix::value_type{1, 0}, SU2Matrix::value_type{0, 0});
+
+SU2Matrix make_su2matrix(Eigen::Matrix2cd const &mat);
+
+Eigen::Matrix2cd make_eigen(SU2Matrix const &mat);
+
+SU2Matrix exp(SU2Matrix const &mat);
