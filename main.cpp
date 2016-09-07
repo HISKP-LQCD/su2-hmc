@@ -55,7 +55,9 @@ int main() {
     int configs_computed = 0;
 
     std::ofstream ofs_energy("energy.tsv");
-    std::ofstream ofs_plaquette("plaquette-trace-real.tsv");
+    std::ofstream ofs_plaquette("plaquette.tsv");
+    std::ofstream ofs_energy_reject("energy-reject.tsv");
+    std::ofstream ofs_plaquette_reject("plaquette-reject.tsv");
 
     int accepted = 0;
     int trials = 0;
@@ -73,12 +75,13 @@ int main() {
 
         std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference;
 
+            const double average_plaquette =
+                get_plaquette_trace_real(links) / links.get_volume();
+
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
             std::cout << "\tAccepted." << std::endl;
 
-            const double average_plaquette =
-                get_plaquette_trace_real(links) / links.get_volume();
 
             ofs_energy << configs_computed << "\t" << new_energy << std::endl;
             ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
@@ -95,6 +98,9 @@ int main() {
         } else {
             std::cout << "\tRejected." << std::endl;
             links = old_links;
+
+            ofs_energy_reject << configs_computed << "\t" << new_energy << std::endl;
+            ofs_plaquette_reject << configs_computed << "\t" << average_plaquette << std::endl;
         }
 
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
