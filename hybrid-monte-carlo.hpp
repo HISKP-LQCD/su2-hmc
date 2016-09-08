@@ -99,3 +99,5 @@ Matrix get_plaquette(int const n1,
 double get_plaquette_trace_real(Configuration const &links);
 
 double get_energy(Configuration const &links, Configuration const &momenta);
+double get_link_energy(Configuration const &links);
+double get_momentum_energy(Configuration const &momenta);

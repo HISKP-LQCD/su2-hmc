@@ -72,12 +72,21 @@ int main() {
 
         double const old_energy = get_energy(links, momenta);
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
-            double const old_energy = get_energy(links, momenta);
+            double const old_links_energy = get_link_energy(links);
+            double const old_momentum_energy = get_momentum_energy(momenta);
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-            double const new_energy = get_energy(links, momenta);
-            double const energy_difference = new_energy - old_energy;
-            std::cout << "MD Energy: " << old_energy << " → " << new_energy
-                      << "; ΔE = " << energy_difference << std::endl;
+            double const new_links_energy = get_link_energy(links);
+            double const new_momentum_energy = get_momentum_energy(momenta);
+
+            double const links_energy_difference = new_links_energy - old_links_energy;
+            double const momentum_energy_difference = new_momentum_energy - old_momentum_energy;
+
+            double const energy_difference =
+                links_energy_difference + momentum_energy_difference;
+
+            std::cout << "ΔMD Energy: Links = " << links_energy_difference
+                      << ", momentum = " << momentum_energy_difference
+                      << ", total = " << energy_difference << std::endl;
         }
 
         double const new_energy = get_energy(links, momenta);

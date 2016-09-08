@@ -283,17 +283,20 @@ double get_plaquette_trace_real(Configuration const &links) {
     return sum;
 }
 
-double get_energy(Configuration const &links, Configuration const &momenta) {
+double get_link_energy(Configuration const &links) {
     double links_part = 0.0;
     links_part += links.get_volume() * 4 * 4;
     links_part -= get_plaquette_trace_real(links);
+    return links_part;
+}
 
+double get_momentum_energy(Configuration const &momenta) {
     double momentum_part = 0.0;
 #pragma omp parallel for reduction(+ : momentum_part)
-    for (int n1 = 0; n1 < links.length_time; ++n1) {
-        for (int n2 = 0; n2 < links.length_space; ++n2) {
-            for (int n3 = 0; n3 < links.length_space; ++n3) {
-                for (int n4 = 0; n4 < links.length_space; ++n4) {
+    for (int n1 = 0; n1 < momenta.length_time; ++n1) {
+        for (int n2 = 0; n2 < momenta.length_space; ++n2) {
+            for (int n3 = 0; n3 < momenta.length_space; ++n3) {
+                for (int n4 = 0; n4 < momenta.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         auto const &momentum = momenta(n1, n2, n3, n4, mu);
                         auto const trace = (momentum * momentum).trace();
@@ -306,9 +309,9 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
             }
         }
     }
+     return 0.5 * momentum_part;
+}
 
-    //std::cout << "Momentum: " << momentum_part << std::endl;
-
-    // TODO Include $g_\text s$ and $\beta$ here?
-    return links_part + 0.5 * momentum_part;
+double get_energy(Configuration const &links, Configuration const &momenta) {
+    return get_link_energy(links) + get_momentum_energy(momenta);
 }
