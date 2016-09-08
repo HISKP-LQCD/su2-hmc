@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-double const tolerance = 1e-5;
+double constexpr tolerance = 1e-5;
 
 bool is_zero(Eigen::Matrix2cd const &mat) {
     for (int row = 0; row < 2; ++row) {
@@ -51,4 +51,8 @@ bool is_real(std::complex<double> const &c) {
 
 bool is_traceless(Eigen::Matrix2cd const &mat) {
     return is_zero(mat.trace());
+}
+
+bool is_equal(double const d1, double const d2) {
+    return is_zero(d1 - d2);
 }

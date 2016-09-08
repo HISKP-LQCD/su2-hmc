@@ -8,6 +8,7 @@ add_executable(tests
     ../su2matrix.cpp
     hybrid-monte-carlo.cpp
     main.cpp
+    pauli-matrices.cpp
     sanity-checks.cpp
 
 )

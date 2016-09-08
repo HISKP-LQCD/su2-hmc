@@ -1,6 +1,5 @@
 // Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
 
-
 #include "hybrid-monte-carlo.hpp"
 
 #include "pauli-matrices.hpp"
@@ -12,8 +11,17 @@
 #include <iostream>
 #include <random>
 
-Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
-                                        std::normal_distribution<double> &dist) {
+std::complex<double> constexpr imag_unit{0, 1};
+
+void global_gauge_transformation(Eigen::Matrix2cd const &transformation,
+                                 Configuration &links) {
+    for (int i = 0; i < links.get_size(); ++i) {
+        links[i] *= transformation;
+    }
+}
+
+Eigen::Matrix2cd random_from_algebra(std::mt19937 &engine,
+                                     std::normal_distribution<double> &dist) {
     std::vector<double> coefficients = {dist(engine), dist(engine), dist(engine)};
     auto const pauli_matrices = PauliMatrices::get_instance();
     Eigen::Matrix2cd algebra_element;
@@ -22,8 +30,15 @@ Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
         algebra_element += scaled_generator;
     }
 
-
     return algebra_element;
+}
+
+Eigen::Matrix2cd random_from_group(std::mt19937 &engine,
+                                   std::normal_distribution<double> &dist) {
+    auto const exponent =
+         imag_unit * random_from_algebra(engine, dist);
+    auto const next = exponent.exp();
+    return next;
 }
 
 Configuration make_hot_start(int const length_space,
@@ -38,25 +53,24 @@ Configuration make_hot_start(int const length_space,
     return links;
 }
 
-void randomize_algebra(Configuration &links,
+void randomize_algebra(Configuration &config,
                        std::mt19937 &engine,
                        std::normal_distribution<double> &dist) {
-    for (int i = 0; i < links.get_size(); ++i) {
-        auto const next = generate_from_gaussian(engine, dist);
+    for (int i = 0; i < config.get_size(); ++i) {
+        auto const next = random_from_algebra(engine, dist);
         assert(is_hermitian(next));
-        links[i] = next;
+        assert(is_traceless(next));
+        config[i] = next;
     }
 }
 
-void randomize_group(Configuration &links,
+void randomize_group(Configuration &config,
                      std::mt19937 &engine,
                      std::normal_distribution<double> &dist) {
-    for (int i = 0; i < links.get_size(); ++i) {
-        auto const exponent =
-            std::complex<double>{0, 1} * generate_from_gaussian(engine, dist);
-        auto const next = exponent.exp();
+    for (int i = 0; i < config.get_size(); ++i) {
+        auto const next = random_from_group(engine, dist);
         assert(is_unitary(next));
-        links[i] = next;
+        config[i] = next;
     }
 }
 
@@ -122,8 +136,12 @@ Eigen::Matrix2cd compute_new_momentum(int const n1,
                                       double const beta) {
     // Copy old momentum.
     Eigen::Matrix2cd result = momenta(n1, n2, n3, n4, mu);
+    assert(is_traceless(result));
+    assert(is_hermitian(result));
     result +=
         time_step / 2 * compute_momentum_derivative(n1, n2, n3, n4, mu, links, beta);
+    assert(is_traceless(result));
+    assert(is_hermitian(result));
     return result;
 }
 
@@ -174,10 +192,8 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
     auto staples = get_staples(n1, n2, n3, n4, mu, links);
     Eigen::Matrix2cd const links_staples = links(n1, n2, n3, n4, mu) * staples;
     Eigen::Matrix2cd const minus_adjoint = links_staples - links_staples.adjoint().eval();
-    Eigen::Matrix2cd const result = std::complex<double>{0, 1} * beta / 6.0 * minus_adjoint;
-
+    Eigen::Matrix2cd const result = imag_unit * beta / 6.0 * minus_adjoint;
     Eigen::Matrix2cd const trace = Eigen::Matrix2cd::Identity() * 0.5 * result.trace();
-
     Eigen::Matrix2cd const traceless = result - trace;
 
 #ifndef NDEBUG
@@ -209,10 +225,10 @@ Eigen::Matrix2cd compute_new_link(int const n1,
                                   Configuration const &links,
                                   Configuration const &momenta_half,
                                   double const time_step) {
-    auto const exponent =
-        std::complex<double>{0, 1} * time_step * momenta_half(n1, n2, n3, n4, mu);
+    auto const exponent = imag_unit * time_step * momenta_half(n1, n2, n3, n4, mu);
     auto const rotation = exponent.exp();
     auto const new_link = rotation * links(n1, n2, n3, n4, mu);
+
     assert(is_unitary(new_link));
     return new_link;
 }
@@ -270,7 +286,7 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
     links_part -= get_plaquette_trace_real(links);
 
     double momentum_part = 0.0;
-#pragma omp parallel for reduction(+ : momentum_part, momentum_part_imag)
+#pragma omp parallel for reduction(+ : momentum_part)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {

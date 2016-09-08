@@ -8,13 +8,13 @@
 
 #include <random>
 
-/**
-  Generate an su(2) element.
+void global_gauge_transformation(Eigen::Matrix2cd const &transformation,
+                                 Configuration &links);
 
-  The generators of the algebra are multiplied with a Gaussian random number.
-  */
-Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
-                                        std::normal_distribution<double> &dist);
+Eigen::Matrix2cd random_from_algebra(std::mt19937 &engine,
+                                     std::normal_distribution<double> &dist);
+Eigen::Matrix2cd random_from_group(std::mt19937 &engine,
+                                   std::normal_distribution<double> &dist);
 
 /**
   Creates a SU(2) random configuration.

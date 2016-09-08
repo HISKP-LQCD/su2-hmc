@@ -1,6 +1,7 @@
 // Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
 
 #include "hybrid-monte-carlo.hpp"
+#include "sanity-checks.hpp"
 
 #include <boost/format.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -69,6 +70,11 @@ int main() {
         // FIXME The standard deviation here should depend on the time step.
         randomize_algebra(momenta, engine, dist);
 
+        for (int i = 0; i < momenta.get_size(); ++i) {
+            assert(is_hermitian(momenta[i]));
+            assert(is_traceless(momenta[i]));
+        }
+
         double const old_energy = get_energy(links, momenta);
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
@@ -79,8 +85,16 @@ int main() {
 
         std::cout << "Energy: " << old_energy << " → " << new_energy << "\tΔE = " << energy_difference;
 
-        const double average_plaquette =
+        double const average_plaquette =
             get_plaquette_trace_real(links) / (links.get_volume() * 4);
+
+        auto const transformation = random_from_group(engine, dist);
+        global_gauge_transformation(transformation, links);
+
+        double const average_plaquette_2 =
+            get_plaquette_trace_real(links) / (links.get_volume() * 4);
+
+        assert(is_equal(average_plaquette, average_plaquette_2));
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
@@ -109,6 +123,7 @@ int main() {
         }
 
         std::cout << "Plaquette: " << average_plaquette << std::endl;
+        std::cout << "Plaquette after global SU(2) transformation: " << average_plaquette_2 << std::endl;
 
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
 

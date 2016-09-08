@@ -43,7 +43,7 @@ class Configuration {
 
     size_t storage_size() const { return data.size() * sizeof(value_type); };
     int get_volume() const { return volume; }
-    size_t get_size() const { return data.size(); }
+    int get_size() const { return data.size(); }
 
     void save(std::string const &path) const;
 
@@ -75,7 +75,7 @@ class Configuration {
         int const index = n1_p * spacing_n1 + n2_p * spacing_n2 + n3_p * spacing_n3 +
                           n4_p * spacing_n4 + mu;
 
-        assert(0 <= index && index < volume);
+        assert(0 <= index && index < data.size());
 
         return index;
     }
