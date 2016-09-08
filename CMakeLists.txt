@@ -66,8 +66,11 @@ add_executable(su2-hmc
     hybrid-monte-carlo.cpp
     main.cpp
     pauli-matrices.cpp
+    sanity-checks.cpp
     su2matrix.cpp
 
     )
 
 target_link_libraries(su2-hmc ${Boost_LIBS})
+
+add_subdirectory(tests)

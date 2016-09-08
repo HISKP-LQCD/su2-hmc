@@ -59,8 +59,9 @@ void randomize_group(Configuration &links,
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        links(n1, n2, n3, n4, mu) =
-                            generate_from_gaussian(engine, dist).exp();
+                        auto const exponent = std::complex<double>{0, 1} *
+                                              generate_from_gaussian(engine, dist);
+                        links(n1, n2, n3, n4, mu) = exponent.exp();
                     }
                 }
             }
@@ -167,7 +168,7 @@ Eigen::Matrix2cd get_staples(int const n1,
         ++coords[mu];
         auto &link4 = links(coords, nu);
 
-        staples += link4 * link5.adjoint() * link6.adjoint();
+        staples += link4.adjoint() * link5.adjoint() * link6;
     }
     return staples;
 }
@@ -271,7 +272,7 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
         }
     }
 
-    std::cout << "Momentum: " << momentum_part << "\t" << momentum_part_imag << std::endl;
+    std::cout << "Momentum: Re = " << momentum_part << "\t Im = " << momentum_part_imag << std::endl;
 
     // TODO Include $g_\text s$ and $\beta$ here?
     return links_part + 0.5 * momentum_part;

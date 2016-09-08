@@ -39,6 +39,8 @@ int main() {
 
     std::cout << "Element:\n";
     std::cout << links(0, 0, 0, 0, 0) << std::endl;
+    std::cout << "U U^\\dagger:\n";
+    std::cout << links(0, 0, 0, 0, 0) * links(0, 0, 0, 0, 0).adjoint().eval() << std::endl;
 
     const double time_step = config.get<double>("md.time_step");
     const double beta = config.get<double>("md.beta");
@@ -75,7 +77,7 @@ int main() {
         double const new_energy = get_energy(links, momenta);
         double const energy_difference = new_energy - old_energy;
 
-        std::cout << old_energy << "\t" << new_energy << "\t" << energy_difference;
+        std::cout << "Energy: " << old_energy << " → " << new_energy << "\tΔE = " << energy_difference;
 
         const double average_plaquette =
             get_plaquette_trace_real(links) / (links.get_volume() * 4);
@@ -105,6 +107,8 @@ int main() {
             ofs_plaquette_reject << configs_computed << "\t" << average_plaquette
                                  << std::endl;
         }
+
+        std::cout << "Plaquette: " << average_plaquette << std::endl;
 
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
 
