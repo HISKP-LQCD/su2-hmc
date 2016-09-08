@@ -4,9 +4,11 @@
 #include "hybrid-monte-carlo.hpp"
 
 #include "pauli-matrices.hpp"
+#include "sanity-checks.hpp"
 
 #include <unsupported/Eigen/MatrixFunctions>
 
+#include <cassert>
 #include <iostream>
 #include <random>
 
@@ -19,6 +21,7 @@ Eigen::Matrix2cd generate_from_gaussian(std::mt19937 &engine,
         Eigen::Matrix2cd scaled_generator = coefficients[i] * pauli_matrices.get(i);
         algebra_element += scaled_generator;
     }
+
 
     return algebra_element;
 }
@@ -43,7 +46,9 @@ void randomize_algebra(Configuration &links,
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        links(n1, n2, n3, n4, mu) = generate_from_gaussian(engine, dist);
+                        auto const next = generate_from_gaussian(engine, dist);
+                        assert(is_hermitian(next));
+                        links(n1, n2, n3, n4, mu) = next;
                     }
                 }
             }
@@ -61,7 +66,9 @@ void randomize_group(Configuration &links,
                     for (int mu = 0; mu < 4; ++mu) {
                         auto const exponent = std::complex<double>{0, 1} *
                                               generate_from_gaussian(engine, dist);
-                        links(n1, n2, n3, n4, mu) = exponent.exp();
+                        auto const next = exponent.exp();
+                        assert(is_unitary(next);
+                        links(n1, n2, n3, n4, mu) = next;
                     }
                 }
             }
