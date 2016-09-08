@@ -13,32 +13,38 @@
 
 std::complex<double> constexpr imag_unit{0, 1};
 
-void global_gauge_transformation(Eigen::Matrix2cd const &transformation,
-                                 Configuration &links) {
+void global_gauge_transformation(Matrix const &transformation, Configuration &links) {
     for (int i = 0; i < links.get_size(); ++i) {
         links[i] *= transformation;
     }
 }
 
-Eigen::Matrix2cd random_from_algebra(std::mt19937 &engine,
-                                     std::normal_distribution<double> &dist) {
+Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double> &dist) {
     std::vector<double> coefficients = {dist(engine), dist(engine), dist(engine)};
     auto const pauli_matrices = PauliMatrices::get_instance();
-    Eigen::Matrix2cd algebra_element;
+    Matrix algebra_element;
     for (int i = 0; i < 3; ++i) {
-        Eigen::Matrix2cd scaled_generator = coefficients[i] * pauli_matrices.get(i);
+        Matrix scaled_generator = coefficients[i] * pauli_matrices.get(i);
         algebra_element += scaled_generator;
     }
 
+    assert(is_hermitian(algebra_element));
+    assert(is_traceless(algebra_element));
     return algebra_element;
 }
 
-Eigen::Matrix2cd random_from_group(std::mt19937 &engine,
-                                   std::normal_distribution<double> &dist) {
-    auto const exponent =
-         imag_unit * random_from_algebra(engine, dist);
-    auto const next = exponent.exp();
-    return next;
+Matrix group_from_algebra(Matrix const &algebra_element) {
+    auto const exponent = imag_unit * algebra_element;
+    auto const group_element = exponent.exp();
+    assert(is_unitary(group_element));
+    return group_element;
+}
+
+Matrix random_from_group(std::mt19937 &engine, std::normal_distribution<double> &dist) {
+    auto const algebra_element = random_from_algebra(engine, dist);
+    auto const group_element = group_from_algebra(algebra_element);
+    assert(is_unitary(group_element));
+    return group_element;
 }
 
 Configuration make_hot_start(int const length_space,
@@ -58,8 +64,6 @@ void randomize_algebra(Configuration &config,
                        std::normal_distribution<double> &dist) {
     for (int i = 0; i < config.get_size(); ++i) {
         auto const next = random_from_algebra(engine, dist);
-        assert(is_hermitian(next));
-        assert(is_traceless(next));
         config[i] = next;
     }
 }
@@ -69,7 +73,6 @@ void randomize_group(Configuration &config,
                      std::normal_distribution<double> &dist) {
     for (int i = 0; i < config.get_size(); ++i) {
         auto const next = random_from_group(engine, dist);
-        assert(is_unitary(next));
         config[i] = next;
     }
 }
@@ -125,7 +128,7 @@ void md_step(Configuration &links,
     }
 }
 
-Eigen::Matrix2cd compute_new_momentum(int const n1,
+Matrix compute_new_momentum(int const n1,
                                       int const n2,
                                       int const n3,
                                       int const n4,
@@ -135,7 +138,7 @@ Eigen::Matrix2cd compute_new_momentum(int const n1,
                                       double const time_step,
                                       double const beta) {
     // Copy old momentum.
-    Eigen::Matrix2cd result = momenta(n1, n2, n3, n4, mu);
+    Matrix result = momenta(n1, n2, n3, n4, mu);
     assert(is_traceless(result));
     assert(is_hermitian(result));
     result +=
@@ -145,13 +148,13 @@ Eigen::Matrix2cd compute_new_momentum(int const n1,
     return result;
 }
 
-Eigen::Matrix2cd get_staples(int const n1,
+Matrix get_staples(int const n1,
                              int const n2,
                              int const n3,
                              int const n4,
                              int const mu,
                              Configuration const &links) {
-    Eigen::Matrix2cd staples;
+    Matrix staples;
     // XXX Perhaps use std::array here.
     std::vector<int> const old_coords{n1, n2, n3, n4};
     for (int nu = 0; nu < 4; ++nu) {
@@ -182,7 +185,7 @@ Eigen::Matrix2cd get_staples(int const n1,
     return staples;
 }
 
-Eigen::Matrix2cd compute_momentum_derivative(int const n1,
+Matrix compute_momentum_derivative(int const n1,
                                              int const n2,
                                              int const n3,
                                              int const n4,
@@ -190,14 +193,14 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
                                              Configuration const &links,
                                              double const beta) {
     auto staples = get_staples(n1, n2, n3, n4, mu, links);
-    Eigen::Matrix2cd const links_staples = links(n1, n2, n3, n4, mu) * staples;
-    Eigen::Matrix2cd const minus_adjoint = links_staples - links_staples.adjoint().eval();
-    Eigen::Matrix2cd const result = imag_unit * beta / 6.0 * minus_adjoint;
-    Eigen::Matrix2cd const trace = Eigen::Matrix2cd::Identity() * 0.5 * result.trace();
-    Eigen::Matrix2cd const traceless = result - trace;
+    Matrix const links_staples = links(n1, n2, n3, n4, mu) * staples;
+    Matrix const minus_adjoint = links_staples - links_staples.adjoint().eval();
+    Matrix const result = imag_unit * beta / 6.0 * minus_adjoint;
+    Matrix const trace = Matrix::Identity() * 0.5 * result.trace();
+    Matrix const traceless = result - trace;
 
 #ifndef NDEBUG
-    if(!is_traceless(traceless)) {
+    if (!is_traceless(traceless)) {
         std::cerr << "Momentum is not traceless!\n";
         std::cerr << n1 << ", " << n2 << ", " << n3 << ", " << n4 << "; " << mu << "\n";
         std::cerr << "UV:\n";
@@ -217,7 +220,7 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
     return traceless;
 }
 
-Eigen::Matrix2cd compute_new_link(int const n1,
+Matrix compute_new_link(int const n1,
                                   int const n2,
                                   int const n3,
                                   int const n4,
@@ -233,7 +236,7 @@ Eigen::Matrix2cd compute_new_link(int const n1,
     return new_link;
 }
 
-Eigen::Matrix2cd get_plaquette(int const n1,
+Matrix get_plaquette(int const n1,
                                int const n2,
                                int const n3,
                                int const n4,
@@ -250,7 +253,7 @@ Eigen::Matrix2cd get_plaquette(int const n1,
     ++coords[nu];
     auto &link3 = links(coords, mu);
 
-    Eigen::Matrix2cd const plaquette = link1 * link2 * link3.adjoint() * link4.adjoint();
+    Matrix const plaquette = link1 * link2 * link3.adjoint() * link4.adjoint();
     assert(is_unitary(plaquette));
     return plaquette;
 }
@@ -304,7 +307,7 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
         }
     }
 
-    std::cout << "Momentum: " << momentum_part << std::endl;
+    //std::cout << "Momentum: " << momentum_part << std::endl;
 
     // TODO Include $g_\text s$ and $\beta$ here?
     return links_part + 0.5 * momentum_part;

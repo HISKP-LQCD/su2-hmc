@@ -5,16 +5,15 @@
 #pragma once
 
 #include "configuration.hpp"
+#include "matrix.hpp"
 
 #include <random>
 
-void global_gauge_transformation(Eigen::Matrix2cd const &transformation,
-                                 Configuration &links);
+void global_gauge_transformation(Matrix const &transformation, Configuration &links);
 
-Eigen::Matrix2cd random_from_algebra(std::mt19937 &engine,
-                                     std::normal_distribution<double> &dist);
-Eigen::Matrix2cd random_from_group(std::mt19937 &engine,
-                                   std::normal_distribution<double> &dist);
+Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double> &dist);
+Matrix random_from_group(std::mt19937 &engine, std::normal_distribution<double> &dist);
+Matrix group_from_algebra(Matrix const &algebra_element);
 
 /**
   Creates a SU(2) random configuration.
@@ -52,50 +51,50 @@ void md_step(Configuration &links,
 /**
   Compute the new momentum half a timestep further.
   */
-Eigen::Matrix2cd compute_new_momentum(int const n1,
-                                      int const n2,
-                                      int const n3,
-                                      int const n4,
-                                      int const mu,
-                                      Configuration const &links,
-                                      Configuration const &momenta,
-                                      double const time_step,
-                                      double const beta);
+Matrix compute_new_momentum(int const n1,
+                            int const n2,
+                            int const n3,
+                            int const n4,
+                            int const mu,
+                            Configuration const &links,
+                            Configuration const &momenta,
+                            double const time_step,
+                            double const beta);
 
 /**
   Compute the staples for a given link.
   */
-Eigen::Matrix2cd get_staples(int const n1,
-                             int const n2,
-                             int const n3,
-                             int const n4,
-                             int const mu,
-                             Configuration const &links);
+Matrix get_staples(int const n1,
+                   int const n2,
+                   int const n3,
+                   int const n4,
+                   int const mu,
+                   Configuration const &links);
 
-Eigen::Matrix2cd compute_momentum_derivative(int const n1,
-                                             int const n2,
-                                             int const n3,
-                                             int const n4,
-                                             int const mu,
-                                             Configuration const &links,
-                                             double const beta);
+Matrix compute_momentum_derivative(int const n1,
+                                   int const n2,
+                                   int const n3,
+                                   int const n4,
+                                   int const mu,
+                                   Configuration const &links,
+                                   double const beta);
 
-Eigen::Matrix2cd compute_new_link(int const n1,
-                                  int const n2,
-                                  int const n3,
-                                  int const n4,
-                                  int const mu,
-                                  Configuration const &links,
-                                  Configuration const &momenta_half,
-                                  double const time_step);
+Matrix compute_new_link(int const n1,
+                        int const n2,
+                        int const n3,
+                        int const n4,
+                        int const mu,
+                        Configuration const &links,
+                        Configuration const &momenta_half,
+                        double const time_step);
 
-Eigen::Matrix2cd get_plaquette(int const n1,
-                               int const n2,
-                               int const n3,
-                               int const n4,
-                               int const mu,
-                               int const nu,
-                               Configuration const &links);
+Matrix get_plaquette(int const n1,
+                     int const n2,
+                     int const n3,
+                     int const n4,
+                     int const mu,
+                     int const nu,
+                     Configuration const &links);
 
 double get_plaquette_trace_real(Configuration const &links);
 
