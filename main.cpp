@@ -29,19 +29,12 @@ int main() {
         abort();
     }
 
-    std::cout << "Start" << std::endl;
-
     int const length_time = config.get<int>("lattice.length_time");
     int const length_space = config.get<int>("lattice.length_space");
 
     auto links = make_hot_start(length_space, length_time,
                                 config.get<double>("init.hot_start_std"),
                                 config.get<int>("init.seed"));
-
-    std::cout << "Element:\n";
-    std::cout << links(0, 0, 0, 0, 0) << std::endl;
-    std::cout << "U U^\\dagger:\n";
-    std::cout << links(0, 0, 0, 0, 0) * links(0, 0, 0, 0, 0).adjoint().eval() << std::endl;
 
     const double time_step = config.get<double>("md.time_step");
     const double beta = config.get<double>("md.beta");
@@ -100,10 +93,11 @@ int main() {
 
         auto const transformation = random_from_group(engine, dist);
         global_gauge_transformation(transformation, links);
-
         double const average_plaquette_2 =
             get_plaquette_trace_real(links) / (links.get_volume() * 4);
-
+        double const plaquette_diference = average_plaquette_2 - average_plaquette;
+        std::cout << "Global transform: " << average_plaquette << " → "
+                  << average_plaquette_2 << "; Δ = " << plaquette_diference << std::endl;
         assert(is_equal(average_plaquette, average_plaquette_2));
 
         // Accept-Reject.

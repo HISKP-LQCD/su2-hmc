@@ -195,12 +195,10 @@ Matrix compute_momentum_derivative(int const n1,
     auto staples = get_staples(n1, n2, n3, n4, mu, links);
     Matrix const links_staples = links(n1, n2, n3, n4, mu) * staples;
     Matrix const minus_adjoint = links_staples - links_staples.adjoint().eval();
-    Matrix const result = imag_unit * beta / 6.0 * minus_adjoint;
-    Matrix const trace = Matrix::Identity() * 0.5 * result.trace();
-    Matrix const traceless = result - trace;
+    Matrix const derivative = imag_unit * beta / 6.0 * minus_adjoint;
 
 #ifndef NDEBUG
-    if (!is_traceless(traceless)) {
+    if (!is_traceless(derivative)) {
         std::cerr << "Momentum is not traceless!\n";
         std::cerr << n1 << ", " << n2 << ", " << n3 << ", " << n4 << "; " << mu << "\n";
         std::cerr << "UV:\n";
@@ -208,16 +206,14 @@ Matrix compute_momentum_derivative(int const n1,
         std::cerr << "UV - (UV)^\\dagger:\n";
         std::cerr << minus_adjoint << "\n";
         std::cerr << "\\dot H:\n";
-        std::cerr << result << std::endl;
-        std::cerr << "\\dot H - Tr(\\dot H):\n";
-        std::cerr << traceless << std::endl;
+        std::cerr << derivative << std::endl;
     }
 #endif
 
-    assert(is_traceless(traceless));
-    assert(is_hermitian(traceless));
+    assert(is_traceless(derivative));
+    assert(is_hermitian(derivative));
 
-    return traceless;
+    return derivative;
 }
 
 Matrix compute_new_link(int const n1,
@@ -230,9 +226,11 @@ Matrix compute_new_link(int const n1,
                                   double const time_step) {
     auto const exponent = imag_unit * time_step * momenta_half(n1, n2, n3, n4, mu);
     auto const rotation = exponent.exp();
-    auto const new_link = rotation * links(n1, n2, n3, n4, mu);
+    assert(is_unitary(rotation));
 
+    auto const new_link = rotation * links(n1, n2, n3, n4, mu);
     assert(is_unitary(new_link));
+
     return new_link;
 }
 
@@ -300,10 +298,10 @@ double get_momentum_energy(Configuration const &momenta) {
                     for (int mu = 0; mu < 4; ++mu) {
                         auto const &momentum = momenta(n1, n2, n3, n4, mu);
                         auto const trace = (momentum * momentum).trace();
+                        assert(is_real(trace));
                         auto const summand = trace.real();
                         assert(std::isfinite(summand));
                         momentum_part += summand;
-                        assert(is_real(trace));
                     }
                 }
             }

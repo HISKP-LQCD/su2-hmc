@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-double constexpr tolerance = 1e-5;
+double constexpr tolerance = 1e-10;
 
 bool is_zero(Eigen::Matrix2cd const &mat) {
     for (int row = 0; row < 2; ++row) {
