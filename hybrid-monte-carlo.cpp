@@ -172,25 +172,33 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
                                              Configuration const &links,
                                              double const beta) {
     auto staples = get_staples(n1, n2, n3, n4, mu, links);
-    Eigen::Matrix2cd links_staples = links(n1, n2, n3, n4, mu) * staples;
-    Eigen::Matrix2cd minus_adjoint = links_staples - links_staples.adjoint().eval();
-    Eigen::Matrix2cd result = std::complex<double>{0, 1} * beta / 6.0 * minus_adjoint;
+    Eigen::Matrix2cd const links_staples = links(n1, n2, n3, n4, mu) * staples;
+    Eigen::Matrix2cd const minus_adjoint = links_staples - links_staples.adjoint().eval();
+    Eigen::Matrix2cd const result = std::complex<double>{0, 1} * beta / 6.0 * minus_adjoint;
+
+    Eigen::Matrix2cd const trace = Eigen::Matrix2cd::Identity() * 0.5 * result.trace();
+
+    Eigen::Matrix2cd const traceless = result - trace;
 
 #ifndef NDEBUG
-    if(!is_traceless(result)) {
-        std::cerr << "Momentum is not traceless:\n";
-        std::cerr << result << std::endl;
+    if(!is_traceless(traceless)) {
+        std::cerr << "Momentum is not traceless!\n";
+        std::cerr << n1 << ", " << n2 << ", " << n3 << ", " << n4 << "; " << mu << "\n";
         std::cerr << "UV:\n";
-        std::cerr << links_staples << std::endl;
+        std::cerr << links_staples << "\n";
         std::cerr << "UV - (UV)^\\dagger:\n";
-        std::cerr << minus_adjoint << std::endl;
+        std::cerr << minus_adjoint << "\n";
+        std::cerr << "\\dot H:\n";
+        std::cerr << result << std::endl;
+        std::cerr << "\\dot H - Tr(\\dot H):\n";
+        std::cerr << traceless << std::endl;
     }
 #endif
 
-    assert(is_traceless(result));
-    assert(is_hermitian(result));
+    assert(is_traceless(traceless));
+    assert(is_hermitian(traceless));
 
-    return result;
+    return traceless;
 }
 
 Eigen::Matrix2cd compute_new_link(int const n1,
