@@ -36,3 +36,19 @@ bool is_unity(Eigen::Matrix2cd const &mat) {
 bool is_unitary(Eigen::Matrix2cd const &mat) {
     return is_unity(mat * mat.adjoint().eval());
 }
+
+bool is_zero(double const &d) {
+    return d < tolerance;
+}
+
+bool is_zero(std::complex<double> const &c) {
+    return is_zero(c.real()) && is_zero(c.imag());
+}
+
+bool is_real(std::complex<double> const &c) {
+    return is_zero(c.imag());
+}
+
+bool is_traceless(Eigen::Matrix2cd const &mat) {
+    return is_zero(mat.trace());
+}

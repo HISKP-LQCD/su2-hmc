@@ -41,38 +41,22 @@ Configuration make_hot_start(int const length_space,
 void randomize_algebra(Configuration &links,
                        std::mt19937 &engine,
                        std::normal_distribution<double> &dist) {
-    for (int n1 = 0; n1 < links.length_time; ++n1) {
-        for (int n2 = 0; n2 < links.length_space; ++n2) {
-            for (int n3 = 0; n3 < links.length_space; ++n3) {
-                for (int n4 = 0; n4 < links.length_space; ++n4) {
-                    for (int mu = 0; mu < 4; ++mu) {
-                        auto const next = generate_from_gaussian(engine, dist);
-                        assert(is_hermitian(next));
-                        links(n1, n2, n3, n4, mu) = next;
-                    }
-                }
-            }
-        }
+    for (int i = 0; i < links.get_size(); ++i) {
+        auto const next = generate_from_gaussian(engine, dist);
+        assert(is_hermitian(next));
+        links[i] = next;
     }
 }
 
 void randomize_group(Configuration &links,
                      std::mt19937 &engine,
                      std::normal_distribution<double> &dist) {
-    for (int n1 = 0; n1 < links.length_time; ++n1) {
-        for (int n2 = 0; n2 < links.length_space; ++n2) {
-            for (int n3 = 0; n3 < links.length_space; ++n3) {
-                for (int n4 = 0; n4 < links.length_space; ++n4) {
-                    for (int mu = 0; mu < 4; ++mu) {
-                        auto const exponent = std::complex<double>{0, 1} *
-                                              generate_from_gaussian(engine, dist);
-                        auto const next = exponent.exp();
-                        assert(is_unitary(next);
-                        links(n1, n2, n3, n4, mu) = next;
-                    }
-                }
-            }
-        }
+    for (int i = 0; i < links.get_size(); ++i) {
+        auto const exponent =
+            std::complex<double>{0, 1} * generate_from_gaussian(engine, dist);
+        auto const next = exponent.exp();
+        assert(is_unitary(next));
+        links[i] = next;
     }
 }
 
@@ -188,10 +172,25 @@ Eigen::Matrix2cd compute_momentum_derivative(int const n1,
                                              Configuration const &links,
                                              double const beta) {
     auto staples = get_staples(n1, n2, n3, n4, mu, links);
-    Eigen::Matrix2cd result = links(n1, n2, n3, n4, mu) * staples;
-    result -= result.adjoint().eval();
+    Eigen::Matrix2cd links_staples = links(n1, n2, n3, n4, mu) * staples;
+    Eigen::Matrix2cd minus_adjoint = links_staples - links_staples.adjoint().eval();
+    Eigen::Matrix2cd result = std::complex<double>{0, 1} * beta / 6.0 * minus_adjoint;
 
-    return std::complex<double>{0, 1} * beta / 6.0 * result;
+#ifndef NDEBUG
+    if(!is_traceless(result)) {
+        std::cerr << "Momentum is not traceless:\n";
+        std::cerr << result << std::endl;
+        std::cerr << "UV:\n";
+        std::cerr << links_staples << std::endl;
+        std::cerr << "UV - (UV)^\\dagger:\n";
+        std::cerr << minus_adjoint << std::endl;
+    }
+#endif
+
+    assert(is_traceless(result));
+    assert(is_hermitian(result));
+
+    return result;
 }
 
 Eigen::Matrix2cd compute_new_link(int const n1,
@@ -205,7 +204,9 @@ Eigen::Matrix2cd compute_new_link(int const n1,
     auto const exponent =
         std::complex<double>{0, 1} * time_step * momenta_half(n1, n2, n3, n4, mu);
     auto const rotation = exponent.exp();
-    return rotation * links(n1, n2, n3, n4, mu);
+    auto const new_link = rotation * links(n1, n2, n3, n4, mu);
+    assert(is_unitary(new_link));
+    return new_link;
 }
 
 Eigen::Matrix2cd get_plaquette(int const n1,
@@ -225,7 +226,9 @@ Eigen::Matrix2cd get_plaquette(int const n1,
     ++coords[nu];
     auto &link3 = links(coords, mu);
 
-    return link1 * link2 * link3.adjoint() * link4.adjoint();
+    Eigen::Matrix2cd const plaquette = link1 * link2 * link3.adjoint() * link4.adjoint();
+    assert(is_unitary(plaquette));
+    return plaquette;
 }
 
 double get_plaquette_trace_real(Configuration const &links) {
@@ -259,7 +262,6 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
     links_part -= get_plaquette_trace_real(links);
 
     double momentum_part = 0.0;
-    double momentum_part_imag = 0.0;
 #pragma omp parallel for reduction(+ : momentum_part, momentum_part_imag)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
@@ -271,15 +273,14 @@ double get_energy(Configuration const &links, Configuration const &momenta) {
                         auto const summand = trace.real();
                         assert(std::isfinite(summand));
                         momentum_part += summand;
-                        momentum_part_imag += trace.imag();
-                        // TODO Check that trace.imag() really is zero.
+                        assert(is_real(trace));
                     }
                 }
             }
         }
     }
 
-    std::cout << "Momentum: Re = " << momentum_part << "\t Im = " << momentum_part_imag << std::endl;
+    std::cout << "Momentum: " << momentum_part << std::endl;
 
     // TODO Include $g_\text s$ and $\beta$ here?
     return links_part + 0.5 * momentum_part;

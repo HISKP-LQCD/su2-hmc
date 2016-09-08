@@ -31,13 +31,22 @@ class Configuration {
         return data[get_index(coords[0], coords[1], coords[2], coords[3], mu)];
     }
 
+    value_type &operator[](int const index) {
+        return data[index];
+    }
+
+    const value_type &operator[](int const index) const {
+        return data[index];
+    }
+
     int length_space, length_time;
 
     size_t storage_size() const { return data.size() * sizeof(value_type); };
+    int get_volume() const { return volume; }
+    size_t get_size() const { return data.size(); }
 
     void save(std::string const &path) const;
 
-    int get_volume() const { return volume; }
 
   private:
     int spacing_n4, spacing_n3, spacing_n2, spacing_n1;

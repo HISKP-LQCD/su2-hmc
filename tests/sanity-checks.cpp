@@ -35,3 +35,13 @@ TEST(sanityChecks, isHermitian) {
     m << 1, 0, 1, 0;
     ASSERT_FALSE(is_hermitian(m));
 }
+
+TEST(sanityChecks, isTraceless) {
+    Matrix m;
+    m << 1, 0, 0, -1;
+    ASSERT_TRUE(is_traceless(m));
+    m << 1, 0, 0, 1;
+    ASSERT_FALSE(is_traceless(m));
+    m << 0, 1, 1, 0;
+    ASSERT_TRUE(is_traceless(m));
+}
