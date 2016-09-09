@@ -89,6 +89,24 @@ TEST(hybridMonteCarlo, globalGaugeInvariance) {
     ASSERT_DOUBLE_EQ(old_energy, new_energy);
 }
 
+TEST(hybridMonteCarlo, globalGaugeTransformation) {
+    std::mt19937 engine(0);
+    std::normal_distribution<double> dist(0, 1);
+
+    auto links = make_hot_start(10, 10, 1, 0);
+
+    auto const transformation = random_from_group(engine, dist);
+
+    for (int i = 0; i < links.get_size(); ++i) {
+        ASSERT_TRUE(is_unitary(links[i]));
+    }
+    global_gauge_transformation(transformation, links);
+    for (int i = 0; i < links.get_size(); ++i) {
+        ASSERT_TRUE(is_unitary(links[i]));
+    }
+
+}
+
 TEST(hybridMonteCarlo, coldStartAveragePlaquette) {
     Configuration links(10, 10);
     for (int i = 0; i < links.get_size(); ++i) {

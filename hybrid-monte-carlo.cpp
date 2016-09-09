@@ -15,7 +15,7 @@ std::complex<double> constexpr imag_unit{0, 1};
 
 void global_gauge_transformation(Matrix const &transformation, Configuration &links) {
     for (int i = 0; i < links.get_size(); ++i) {
-        links[i] *= transformation;
+        links[i] = transformation * links[i];
     }
 }
 
