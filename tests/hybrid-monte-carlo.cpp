@@ -74,6 +74,64 @@ TEST(hybridMonteCarlo, randomizeGroup) {
     }
 }
 
+/**
+  Tests whether a plaquette built from four matrices is gauge invariant.
+  */
+TEST(plaquette, simpleInvariance) {
+    // Random generator setup.
+    std::mt19937 engine(0);
+    std::normal_distribution<double> dist(0, 1);
+
+    // Generate four random SU(2) matrices.
+    Matrix const m1 = random_from_group(engine, dist);
+    Matrix const m2 = random_from_group(engine, dist);
+    Matrix const m3 = random_from_group(engine, dist);
+    Matrix const m4 = random_from_group(engine, dist);
+
+    // Generate a random SU(2) matrix to be used as a transformation.
+    Matrix const transformation = random_from_group(engine, dist);
+    ASSERT_TRUE(is_unitary(transformation));
+
+    // Compute the plaquette with the original matrices.
+    Matrix const old_plaquette = m1 * m2 * m3.adjoint() * m4.adjoint();
+
+    // Transform the four matrices.
+    Matrix const m1t = transformation * m1;
+    Matrix const m2t = transformation * m2;
+    Matrix const m3t = transformation * m3;
+    Matrix const m4t = transformation * m4;
+
+    // Compute the new plaquette. This should not change!
+    Matrix const new_plaquette = m1t * m2t * m3t.adjoint() * m4t.adjoint();
+
+    // Compare old and new plaquette.
+    ASSERT_TRUE(is_equal(old_plaquette, new_plaquette))
+        << "old plaquette:\n"
+        << old_plaquette << "\n"
+        << "new plaquette:\n"
+        << new_plaquette << "\n"
+        << "transformation:\n"
+        << transformation << "\n"
+        << "transformation * transformation^\\dagger:\n"
+        << (transformation * transformation.adjoint().eval()) << "\n"
+        << "m1:\n"
+        << m1 << "\n"
+        << "m2:\n"
+        << m2 << "\n"
+        << "m3:\n"
+        << m3 << "\n"
+        << "m4:\n"
+        << m4 << "\n"
+        << "m1t:\n"
+        << m1t << "\n"
+        << "m2t:\n"
+        << m2t << "\n"
+        << "m3t:\n"
+        << m3t << "\n"
+        << "m4t:\n"
+        << m4t << "\n";
+}
+
 TEST(plaquette, globalGaugeInvarianceReversibility) {
     std::mt19937 engine(0);
     std::normal_distribution<double> dist(0, 1);
