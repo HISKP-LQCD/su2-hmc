@@ -94,7 +94,8 @@ Matrix get_plaquette(int const n1,
                      int const n4,
                      int const mu,
                      int const nu,
-                     Configuration const &links);
+                     Configuration const &links,
+                     bool const debug = false);
 
 double get_plaquette_trace_real(Configuration const &links);
 std::complex<double> get_average_plaquette(Configuration const &links);

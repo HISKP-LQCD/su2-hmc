@@ -21,7 +21,7 @@ void global_gauge_transformation(Matrix const &transformation, Configuration &li
 
 Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double> &dist) {
     std::vector<double> coefficients = {dist(engine), dist(engine), dist(engine)};
-    auto const pauli_matrices = PauliMatrices::get_instance();
+    PauliMatrices const &pauli_matrices = PauliMatrices::get_instance();
     Matrix algebra_element;
     for (int i = 0; i < 3; ++i) {
         Matrix scaled_generator = coefficients[i] * pauli_matrices.get(i);
@@ -34,15 +34,15 @@ Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double
 }
 
 Matrix group_from_algebra(Matrix const &algebra_element) {
-    auto const exponent = imag_unit * algebra_element;
-    auto const group_element = exponent.exp();
+    Matrix const exponent = imag_unit * algebra_element;
+    Matrix const group_element = exponent.exp();
     assert(is_unitary(group_element));
     return group_element;
 }
 
 Matrix random_from_group(std::mt19937 &engine, std::normal_distribution<double> &dist) {
-    auto const algebra_element = random_from_algebra(engine, dist);
-    auto const group_element = group_from_algebra(algebra_element);
+    Matrix const algebra_element = random_from_algebra(engine, dist);
+    Matrix const group_element = group_from_algebra(algebra_element);
     assert(is_unitary(group_element));
     return group_element;
 }
@@ -63,7 +63,7 @@ void randomize_algebra(Configuration &config,
                        std::mt19937 &engine,
                        std::normal_distribution<double> &dist) {
     for (int i = 0; i < config.get_size(); ++i) {
-        auto const next = random_from_algebra(engine, dist);
+        Matrix const next = random_from_algebra(engine, dist);
         config[i] = next;
     }
 }
@@ -72,7 +72,7 @@ void randomize_group(Configuration &config,
                      std::mt19937 &engine,
                      std::normal_distribution<double> &dist) {
     for (int i = 0; i < config.get_size(); ++i) {
-        auto const next = random_from_group(engine, dist);
+        Matrix const next = random_from_group(engine, dist);
         config[i] = next;
     }
 }
@@ -163,22 +163,22 @@ Matrix get_staples(int const n1,
         }
         auto coords = old_coords;
 
-        auto &link3 = links(coords, nu);
+        Matrix const &link3 = links(coords, nu);
         ++coords[mu];
-        auto &link1 = links(coords, nu);
+        Matrix const &link1 = links(coords, nu);
         --coords[mu];
         ++coords[nu];
-        auto &link2 = links(coords, mu);
+        Matrix const &link2 = links(coords, mu);
 
         staples += link1 * link2.adjoint() * link3.adjoint();
 
         coords = old_coords;
 
         --coords[nu];
-        auto &link6 = links(coords, nu);
-        auto &link5 = links(coords, mu);
+        Matrix const &link6 = links(coords, nu);
+        Matrix const &link5 = links(coords, mu);
         ++coords[mu];
-        auto &link4 = links(coords, nu);
+        Matrix const &link4 = links(coords, nu);
 
         staples += link4.adjoint() * link5.adjoint() * link6;
     }
@@ -192,7 +192,7 @@ Matrix compute_momentum_derivative(int const n1,
                                              int const mu,
                                              Configuration const &links,
                                              double const beta) {
-    auto staples = get_staples(n1, n2, n3, n4, mu, links);
+    Matrix staples = get_staples(n1, n2, n3, n4, mu, links);
     Matrix const links_staples = links(n1, n2, n3, n4, mu) * staples;
     Matrix const minus_adjoint = links_staples - links_staples.adjoint().eval();
     Matrix const derivative = imag_unit * beta / 6.0 * minus_adjoint;
@@ -224,32 +224,40 @@ Matrix compute_new_link(int const n1,
                                   Configuration const &links,
                                   Configuration const &momenta_half,
                                   double const time_step) {
-    auto const exponent = imag_unit * time_step * momenta_half(n1, n2, n3, n4, mu);
-    auto const rotation = exponent.exp();
+    Matrix const exponent = imag_unit * time_step * momenta_half(n1, n2, n3, n4, mu);
+    Matrix const rotation = exponent.exp();
     assert(is_unitary(rotation));
 
-    auto const new_link = rotation * links(n1, n2, n3, n4, mu);
+    Matrix const new_link = rotation * links(n1, n2, n3, n4, mu);
     assert(is_unitary(new_link));
 
     return new_link;
 }
 
 Matrix get_plaquette(int const n1,
-                               int const n2,
-                               int const n3,
-                               int const n4,
-                               int const mu,
-                               int const nu,
-                               Configuration const &links) {
+                     int const n2,
+                     int const n3,
+                     int const n4,
+                     int const mu,
+                     int const nu,
+                     Configuration const &links,
+                     bool const debug) {
     std::vector<int> coords{n1, n2, n3, n4};
 
-    auto &link1 = links(coords, mu);
-    auto &link4 = links(coords, nu);
+    Matrix const &link1 = links(coords, mu);
+    Matrix const &link4 = links(coords, nu);
     ++coords[mu];
-    auto &link2 = links(coords, nu);
+    Matrix const &link2 = links(coords, nu);
     --coords[mu];
     ++coords[nu];
-    auto &link3 = links(coords, mu);
+    Matrix const &link3 = links(coords, mu);
+
+    if (debug) {
+        std::cout << "link1:\n" << link1 << "\n";
+        std::cout << "link2:\n" << link2 << "\n";
+        std::cout << "link3:\n" << link3 << "\n";
+        std::cout << "link4:\n" << link4 << "\n";
+    }
 
     Matrix const plaquette = link1 * link2 * link3.adjoint() * link4.adjoint();
     assert(is_unitary(plaquette));
@@ -266,7 +274,7 @@ double get_plaquette_trace_real(Configuration const &links) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         for (int nu = 0; nu < mu; ++nu) {
-                            auto const plaquette =
+                            Matrix const plaquette =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
                             double const summand = plaquette.trace().real();
                             assert(std::isfinite(summand));
@@ -294,7 +302,7 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         for (int nu = 0; nu < mu; ++nu) {
-                            auto const plaquette =
+                            Matrix const plaquette =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
                             auto const summand = plaquette.trace();
                             assert(std::isfinite(summand.real()));
@@ -328,7 +336,7 @@ double get_momentum_energy(Configuration const &momenta) {
             for (int n3 = 0; n3 < momenta.length_space; ++n3) {
                 for (int n4 = 0; n4 < momenta.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        auto const &momentum = momenta(n1, n2, n3, n4, mu);
+                        Matrix const &momentum = momenta(n1, n2, n3, n4, mu);
                         auto const trace = (momentum * momentum).trace();
                         assert(is_real(trace));
                         auto const summand = trace.real();
