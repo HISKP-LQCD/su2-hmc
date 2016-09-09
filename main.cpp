@@ -10,6 +10,8 @@
 #include <iostream>
 #include <random>
 
+//#define OUTPUT
+
 namespace ptree = boost::property_tree;
 
 int main() {
@@ -65,9 +67,12 @@ int main() {
 
         double const old_energy = get_energy(links, momenta);
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
+#ifdef OUTPUT
             double const old_links_energy = get_link_energy(links);
             double const old_momentum_energy = get_momentum_energy(momenta);
+#endif
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
+#ifdef OUTPUT
             double const new_links_energy = get_link_energy(links);
             double const new_momentum_energy = get_momentum_energy(momenta);
 
@@ -80,17 +85,21 @@ int main() {
             std::cout << "ΔMD Energy: Links = " << links_energy_difference
                       << ", momentum = " << momentum_energy_difference
                       << ", total = " << energy_difference << std::endl;
+#endif
         }
 
         double const new_energy = get_energy(links, momenta);
         double const energy_difference = new_energy - old_energy;
 
-        std::cout << "HMD Energy: " << old_energy << " → " << new_energy
-                  << "; ΔE = " << energy_difference << std::endl;
+#ifdef OUTPUT
+            std::cout << "HMD Energy: " << old_energy << " → " << new_energy
+                      << "; ΔE = " << energy_difference << std::endl;
+#endif
 
         double const average_plaquette =
             get_plaquette_trace_real(links) / (links.get_volume() * 4);
 
+#ifdef OUTPUT
         auto const transformation = random_from_group(engine, dist);
         global_gauge_transformation(transformation, links);
         double const average_plaquette_2 =
@@ -99,10 +108,11 @@ int main() {
         std::cout << "Global transform: " << average_plaquette << " → "
                   << average_plaquette_2 << "; Δ = " << plaquette_diference << std::endl;
         assert(is_equal(average_plaquette, average_plaquette_2));
+#endif
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
-            std::cout << "\tAccepted." << std::endl;
+            std::cout << "\tAccepted.\n";
 
             ofs_energy << configs_computed << "\t" << (new_energy / links.get_volume())
                        << std::endl;
@@ -117,7 +127,7 @@ int main() {
                 ++configs_stored;
             }
         } else {
-            std::cout << "\tRejected." << std::endl;
+            std::cout << "\tRejected.\n";
             links = old_links;
 
             ofs_energy_reject << configs_computed << "\t"
@@ -126,8 +136,11 @@ int main() {
                                  << std::endl;
         }
 
+#ifdef OUTPUT
         std::cout << "Plaquette: " << average_plaquette << std::endl;
-        std::cout << "Plaquette after global SU(2) transformation: " << average_plaquette_2 << std::endl;
+        std::cout << "Plaquette after global SU(2) transformation: "
+                  << average_plaquette_2 << std::endl;
+#endif
 
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
 
