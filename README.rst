@@ -8,3 +8,8 @@ Dependencies
 ============
 
 - C++ compiler which supports C++14. OpenMP can give a speedup.
+- CMake
+
+- boost ``property_tree`` (INI config file parser)
+- eigen (matrix library)
+- gtest (unit testing framework)
