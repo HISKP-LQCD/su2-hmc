@@ -97,6 +97,7 @@ Matrix get_plaquette(int const n1,
                      Configuration const &links);
 
 double get_plaquette_trace_real(Configuration const &links);
+std::complex<double> get_average_plaquette(Configuration const &links);
 
 double get_energy(Configuration const &links, Configuration const &momenta);
 double get_link_energy(Configuration const &links);

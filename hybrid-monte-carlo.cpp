@@ -281,6 +281,35 @@ double get_plaquette_trace_real(Configuration const &links) {
     return sum;
 }
 
+std::complex<double> get_average_plaquette(Configuration const &links) {
+    double real = 0.0;
+    double imag = 0.0;
+
+#pragma omp parallel for reduction(+ : real, imag)
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
+                        for (int nu = 0; nu < 4; ++nu) {
+                            auto const plaquette =
+                                get_plaquette(n1, n2, n3, n4, mu, nu, links);
+                            auto const summand = plaquette.trace();
+                            assert(std::isfinite(summand.real()));
+                            assert(std::isfinite(summand.imag()));
+                            real += summand.real();
+                            imag += summand.imag();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    double const summands = links.get_volume() * 4;
+    return std::complex<double>{real, imag} / summands;
+}
+
 double get_link_energy(Configuration const &links) {
     double links_part = 0.0;
     links_part += links.get_volume() * 4 * 4;

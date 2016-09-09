@@ -68,3 +68,33 @@ TEST(hybridMonteCarlo, randomizeGroup) {
                                            << (config[i] * config[i].adjoint().eval());
     }
 }
+
+TEST(hybridMonteCarlo, globalGaugeInvariance) {
+    std::mt19937 engine(0);
+    std::normal_distribution<double> dist(0, 1);
+
+    auto links = make_hot_start(10, 10, 1, 0);
+
+    auto const old_plaquette = get_average_plaquette(links);
+    auto const old_energy = get_link_energy(links);
+
+    auto const transformation = random_from_group(engine, dist);
+    global_gauge_transformation(transformation, links);
+
+    auto const new_plaquette = get_average_plaquette(links);
+    auto const new_energy = get_link_energy(links);
+
+    ASSERT_DOUBLE_EQ(old_plaquette.real(), new_plaquette.real());
+    ASSERT_DOUBLE_EQ(old_plaquette.imag(), new_plaquette.imag());
+    ASSERT_DOUBLE_EQ(old_energy, new_energy);
+}
+
+TEST(hybridMonteCarlo, coldStartAveragePlaquette) {
+    Configuration links(10, 10);
+    for (int i = 0; i < links.get_size(); ++i) {
+        links[i] = Matrix::Identity();
+    }
+    auto const average_plaquette = get_average_plaquette(links);
+    ASSERT_DOUBLE_EQ(1.0, average_plaquette.real());
+    ASSERT_DOUBLE_EQ(0.0, average_plaquette.imag());
+}
