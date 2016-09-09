@@ -129,7 +129,7 @@ TEST(plaquette, globalGaugeInvariancePlaquetteInvariance) {
                                 << "After:\n"
                                 << after << "\n"
                                 << "At: t=" << n1 << ", x=" << n2 << ", y=" << n3 << ", z=" << n4
-                                << "; mu=" << mu << ", nu=" << nu << "\n";
+                                << "; mu=" << mu << ", nu=" << nu;
                         }
                     }
                 }
@@ -214,5 +214,5 @@ TEST(hybridMonteCarlo, singlePlaquette) {
         << "m3:\n"
         << m3 << "\n"
         << "m4:\n"
-        << m4 << "\n";
+        << m4;
 }
