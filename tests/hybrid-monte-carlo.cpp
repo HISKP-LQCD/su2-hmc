@@ -114,8 +114,39 @@ TEST(plaquette, simpleInvariance) {
     ASSERT_TRUE(is_unit_determinant(transformation));
     ASSERT_TRUE(is_unit_determinant(transformation_adjoint));
 
+    auto const error = 1e-10;
+
+    auto const old_trace = old_plaquette.trace();
+    auto const new_trace = new_plaquette.trace();
+
     // Compare old and new plaquette.
-    ASSERT_TRUE(is_equal(old_plaquette, new_plaquette))
+    ASSERT_NEAR(old_trace.real(), new_trace.real(), error)
+        << "old plaquette:\n"
+        << old_plaquette << "\n"
+        << "new plaquette:\n"
+        << new_plaquette << "\n"
+        << "transformation:\n"
+        << transformation << "\n"
+        << "transformation * transformation^\\dagger:\n"
+        << (transformation * transformation.adjoint().eval()) << "\n"
+        << "m1:\n"
+        << m1 << "\n"
+        << "m2:\n"
+        << m2 << "\n"
+        << "m3:\n"
+        << m3 << "\n"
+        << "m4:\n"
+        << m4 << "\n"
+        << "m1t:\n"
+        << m1t << "\n"
+        << "m2t:\n"
+        << m2t << "\n"
+        << "m3t:\n"
+        << m3t << "\n"
+        << "m4t:\n"
+        << m4t << "\n";
+
+    ASSERT_NEAR(old_trace.imag(), new_trace.imag(), error)
         << "old plaquette:\n"
         << old_plaquette << "\n"
         << "new plaquette:\n"
@@ -180,6 +211,8 @@ TEST(plaquette, globalGaugeInvariancePlaquetteInvariance) {
     Matrix const transformation = random_from_group(engine, dist);
     global_gauge_transformation(transformation, links);
 
+    auto const error = 1e-10;
+
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -191,7 +224,18 @@ TEST(plaquette, globalGaugeInvariancePlaquetteInvariance) {
                             Matrix const after =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
 
-                            ASSERT_TRUE(is_equal(before, after))
+                            auto const trace_before = before.trace();
+                            auto const trace_after = after.trace();
+
+                            ASSERT_NEAR(trace_before.real(), trace_after.real(), error)
+                                << "Before:\n"
+                                << before << "\n"
+                                << "After:\n"
+                                << after << "\n"
+                                << "At: t=" << n1 << ", x=" << n2 << ", y=" << n3
+                                << ", z=" << n4 << "; mu=" << mu << ", nu=" << nu;
+
+                            ASSERT_NEAR(trace_before.imag(), trace_after.imag(), error)
                                 << "Before:\n"
                                 << before << "\n"
                                 << "After:\n"
