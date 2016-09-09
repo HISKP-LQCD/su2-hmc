@@ -265,7 +265,7 @@ double get_plaquette_trace_real(Configuration const &links) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        for (int nu = 0; nu < 4; ++nu) {
+                        for (int nu = 0; nu < mu; ++nu) {
                             auto const plaquette =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
                             double const summand = plaquette.trace().real();
@@ -278,12 +278,14 @@ double get_plaquette_trace_real(Configuration const &links) {
         }
     }
 
-    return sum / 2;
+    return sum;
 }
 
 std::complex<double> get_average_plaquette(Configuration const &links) {
     double real = 0.0;
     double imag = 0.0;
+
+    auto const identity_trace = Matrix::Identity().trace().real();
 
 #pragma omp parallel for reduction(+ : real, imag)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
@@ -291,7 +293,7 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
-                        for (int nu = 0; nu < 4; ++nu) {
+                        for (int nu = 0; nu < mu; ++nu) {
                             auto const plaquette =
                                 get_plaquette(n1, n2, n3, n4, mu, nu, links);
                             auto const summand = plaquette.trace();
@@ -306,14 +308,15 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
         }
     }
 
-    double const summands = links.get_volume() * 4 * 4 * 2;
+    double const summands = links.get_volume() * (3 + 2 + 1) * identity_trace;
     return std::complex<double>{real, imag} / summands;
 }
 
 double get_link_energy(Configuration const &links) {
+    auto const identity_trace = Matrix::Identity().trace().real();
     double links_part = 0.0;
-    links_part += links.get_volume() * 4 * 4;
-    links_part -= get_plaquette_trace_real(links);
+    links_part += links.get_volume() * (3 + 2 + 1);
+    links_part -= get_plaquette_trace_real(links) / (2 * identity_trace);
     return links_part;
 }
 
