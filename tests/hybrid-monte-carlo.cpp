@@ -105,6 +105,15 @@ TEST(plaquette, simpleInvariance) {
     // Compute the new plaquette. This should not change!
     Matrix const new_plaquette = m1t * m2t * m3t.adjoint() * m4t.adjoint();
 
+    ASSERT_TRUE(is_unitary(old_plaquette));
+    ASSERT_TRUE(is_unitary(new_plaquette));
+    ASSERT_TRUE(is_unitary(transformation));
+    ASSERT_TRUE(is_unitary(transformation_adjoint));
+    ASSERT_TRUE(is_unit_determinant(old_plaquette));
+    ASSERT_TRUE(is_unit_determinant(new_plaquette));
+    ASSERT_TRUE(is_unit_determinant(transformation));
+    ASSERT_TRUE(is_unit_determinant(transformation_adjoint));
+
     // Compare old and new plaquette.
     ASSERT_TRUE(is_equal(old_plaquette, new_plaquette))
         << "old plaquette:\n"
