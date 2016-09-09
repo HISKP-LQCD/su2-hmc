@@ -56,3 +56,7 @@ bool is_traceless(Eigen::Matrix2cd const &mat) {
 bool is_equal(double const d1, double const d2) {
     return is_zero(d1 - d2);
 }
+
+bool is_unit_determinant(Eigen::Matrix2cd const &mat) {
+    return is_zero(mat.determinant() - 1.0);
+}

@@ -25,6 +25,7 @@ TEST(hybridMonteCarlo, generateFromGroup) {
     for (int i = 0; i < 10; ++i) {
         auto const mat = random_from_group(engine, dist);
         ASSERT_TRUE(is_unitary(mat)) << "Happened at i = " << i << "\n" << mat;
+        ASSERT_TRUE(is_unit_determinant(mat)) << "Happened at i = " << i << "\n" << mat;
     }
 }
 
@@ -66,6 +67,10 @@ TEST(hybridMonteCarlo, randomizeGroup) {
         ASSERT_TRUE(is_unitary(config[i])) << "Happened at i = " << i << "\n"
                                            << config[i] << "\nU U^\\dagger:\n"
                                            << (config[i] * config[i].adjoint().eval());
+        ASSERT_TRUE(is_unit_determinant(config[i]))
+            << "Happened at i = " << i << "\n"
+            << config[i] << "\nU U^\\dagger:\n"
+            << (config[i] * config[i].adjoint().eval());
     }
 }
 
@@ -99,10 +104,12 @@ TEST(hybridMonteCarlo, globalGaugeTransformation) {
 
     for (int i = 0; i < links.get_size(); ++i) {
         ASSERT_TRUE(is_unitary(links[i]));
+        ASSERT_TRUE(is_unit_determinant(links[i]));
     }
     global_gauge_transformation(transformation, links);
     for (int i = 0; i < links.get_size(); ++i) {
         ASSERT_TRUE(is_unitary(links[i]));
+        ASSERT_TRUE(is_unit_determinant(links[i]));
     }
 
 }
