@@ -74,40 +74,6 @@ TEST(hybridMonteCarlo, randomizeGroup) {
     }
 }
 
-TEST(plaquette, globalGaugeInvarianceAverages) {
-    std::mt19937 engine(0);
-    std::normal_distribution<double> dist(0, 1);
-
-    Configuration links = make_hot_start(10, 10, 1, 0);
-
-    auto const old_plaquette = get_average_plaquette(links);
-    auto const old_energy = get_link_energy(links);
-
-    Matrix const transformation = random_from_group(engine, dist);
-    global_gauge_transformation(transformation, links);
-
-    auto const new_plaquette = get_average_plaquette(links);
-    auto const new_energy = get_link_energy(links);
-
-    global_gauge_transformation(transformation.adjoint(), links);
-
-    auto const old2_plaquette = get_average_plaquette(links);
-    auto const old2_energy = get_link_energy(links);
-
-    auto const error = 1e-10;
-
-    // Compare values that are transformed forth and back with original values.
-    ASSERT_NEAR(old_plaquette.real(), old2_plaquette.real(), error);
-    ASSERT_NEAR(old_plaquette.imag(), old2_plaquette.imag(), error);
-    ASSERT_NEAR(old_energy, old2_energy, error);
-
-    // The plaquettes should be qauge invariant. Therefore those should be the same as
-    // well.
-    ASSERT_NEAR(old_plaquette.real(), new_plaquette.real(), error);
-    ASSERT_NEAR(old_plaquette.imag(), new_plaquette.imag(), error);
-    ASSERT_NEAR(old_energy, new_energy, error);
-}
-
 TEST(plaquette, globalGaugeInvarianceReversibility) {
     std::mt19937 engine(0);
     std::normal_distribution<double> dist(0, 1);
@@ -170,6 +136,40 @@ TEST(plaquette, globalGaugeInvariancePlaquetteInvariance) {
             }
         }
     }
+}
+
+TEST(plaquette, globalGaugeInvarianceAverages) {
+    std::mt19937 engine(0);
+    std::normal_distribution<double> dist(0, 1);
+
+    Configuration links = make_hot_start(10, 10, 1, 0);
+
+    auto const old_plaquette = get_average_plaquette(links);
+    auto const old_energy = get_link_energy(links);
+
+    Matrix const transformation = random_from_group(engine, dist);
+    global_gauge_transformation(transformation, links);
+
+    auto const new_plaquette = get_average_plaquette(links);
+    auto const new_energy = get_link_energy(links);
+
+    global_gauge_transformation(transformation.adjoint(), links);
+
+    auto const old2_plaquette = get_average_plaquette(links);
+    auto const old2_energy = get_link_energy(links);
+
+    auto const error = 1e-10;
+
+    // Compare values that are transformed forth and back with original values.
+    ASSERT_NEAR(old_plaquette.real(), old2_plaquette.real(), error);
+    ASSERT_NEAR(old_plaquette.imag(), old2_plaquette.imag(), error);
+    ASSERT_NEAR(old_energy, old2_energy, error);
+
+    // The plaquettes should be qauge invariant. Therefore those should be the same as
+    // well.
+    ASSERT_NEAR(old_plaquette.real(), new_plaquette.real(), error);
+    ASSERT_NEAR(old_plaquette.imag(), new_plaquette.imag(), error);
+    ASSERT_NEAR(old_energy, new_energy, error);
 }
 
 TEST(hybridMonteCarlo, coldStartAveragePlaquette) {
