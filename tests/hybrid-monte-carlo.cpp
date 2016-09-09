@@ -74,7 +74,7 @@ TEST(hybridMonteCarlo, randomizeGroup) {
     }
 }
 
-TEST(hybridMonteCarlo, globalGaugeInvariance) {
+TEST(plaquette, globalGaugeInvarianceAverages) {
     std::mt19937 engine(0);
     std::normal_distribution<double> dist(0, 1);
 
@@ -96,16 +96,19 @@ TEST(hybridMonteCarlo, globalGaugeInvariance) {
 
     auto const error = 1e-10;
 
+    // Compare values that are transformed forth and back with original values.
     ASSERT_NEAR(old_plaquette.real(), old2_plaquette.real(), error);
     ASSERT_NEAR(old_plaquette.imag(), old2_plaquette.imag(), error);
     ASSERT_NEAR(old_energy, old2_energy, error);
 
+    // The plaquettes should be qauge invariant. Therefore those should be the same as
+    // well.
     ASSERT_NEAR(old_plaquette.real(), new_plaquette.real(), error);
     ASSERT_NEAR(old_plaquette.imag(), new_plaquette.imag(), error);
     ASSERT_NEAR(old_energy, new_energy, error);
 }
 
-TEST(hybridMonteCarlo, globalGaugeTransformation) {
+TEST(plaquette, globalGaugeInvarianceReversibility) {
     std::mt19937 engine(0);
     std::normal_distribution<double> dist(0, 1);
 
@@ -130,7 +133,43 @@ TEST(hybridMonteCarlo, globalGaugeTransformation) {
         ASSERT_TRUE(is_unit_determinant(links[i]));
         ASSERT_TRUE(is_equal(old_links[i], links[i]));
     }
+}
 
+
+TEST(plaquette, globalGaugeInvariancePlaquetteInvariance) {
+    std::mt19937 engine(0);
+    std::normal_distribution<double> dist(0, 1);
+
+    Configuration links = make_hot_start(10, 10, 1, 0);
+    Configuration const old_links = links;
+
+    Matrix const transformation = random_from_group(engine, dist);
+    global_gauge_transformation(transformation, links);
+
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
+                        for (int nu = 0; nu < 4; ++nu) {
+                            Matrix const before =
+                                get_plaquette(n1, n2, n3, n4, mu, nu, old_links);
+                            Matrix const after =
+                                get_plaquette(n1, n2, n3, n4, mu, nu, links);
+
+                            ASSERT_TRUE(is_equal(before, after))
+                                << "Before:\n"
+                                << before << "\n"
+                                << "After:\n"
+                                << after << "\n"
+                                << "At: t=" << n1 << ", x=" << n2 << ", y=" << n3 << ", z=" << n4
+                                << "; mu=" << mu << ", nu=" << nu << "\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 TEST(hybridMonteCarlo, coldStartAveragePlaquette) {
