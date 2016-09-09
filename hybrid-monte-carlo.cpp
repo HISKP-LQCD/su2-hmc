@@ -278,7 +278,7 @@ double get_plaquette_trace_real(Configuration const &links) {
         }
     }
 
-    return sum;
+    return sum / 2;
 }
 
 std::complex<double> get_average_plaquette(Configuration const &links) {
@@ -306,7 +306,7 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
         }
     }
 
-    double const summands = links.get_volume() * 4;
+    double const summands = links.get_volume() * 4 * 4 * 2;
     return std::complex<double>{real, imag} / summands;
 }
 
