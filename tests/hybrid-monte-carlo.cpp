@@ -96,10 +96,11 @@ TEST(plaquette, simpleInvariance) {
     Matrix const old_plaquette = m1 * m2 * m3.adjoint() * m4.adjoint();
 
     // Transform the four matrices.
-    Matrix const m1t = transformation * m1 * transformation.adjoint().eval();
-    Matrix const m2t = transformation * m2 * transformation.adjoint().eval();
-    Matrix const m3t = transformation * m3 * transformation.adjoint().eval();
-    Matrix const m4t = transformation * m4 * transformation.adjoint().eval();
+    Matrix const transformation_adjoint = transformation.adjoint();
+    Matrix const m1t = transformation * m1 * transformation_adjoint;
+    Matrix const m2t = transformation * m2 * transformation_adjoint;
+    Matrix const m3t = transformation * m3 * transformation_adjoint;
+    Matrix const m4t = transformation * m4 * transformation_adjoint;
 
     // Compute the new plaquette. This should not change!
     Matrix const new_plaquette = m1t * m2t * m3t.adjoint() * m4t.adjoint();
