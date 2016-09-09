@@ -2,16 +2,17 @@
 
 #pragma once
 
-#include <Eigen/Dense>
+#include "matrix.hpp"
 
-bool is_equal(Eigen::Matrix2cd const &mat1, Eigen::Matrix2cd const &mat2);
+
 bool is_equal(double const d1, double const d2);
-bool is_unit_determinant(Eigen::Matrix2cd const &mat);
-bool is_hermitian(Eigen::Matrix2cd const &mat);
+bool is_equal(Matrix const &mat1, Matrix const &mat2);
+bool is_hermitian(Matrix const &mat);
 bool is_real(std::complex<double> const &c);
-bool is_traceless(Eigen::Matrix2cd const &mat);
-bool is_unitary(Eigen::Matrix2cd const &mat);
-bool is_unity(Eigen::Matrix2cd const &mat);
+bool is_traceless(Matrix const &mat);
+bool is_unit_determinant(Matrix const &mat);
+bool is_unitary(Matrix const &mat);
+bool is_unity(Matrix const &mat);
 bool is_zero(double const &d);
-bool is_zero(Eigen::Matrix2cd const &mat);
+bool is_zero(Matrix const &mat);
 bool is_zero(std::complex<double> const &c);

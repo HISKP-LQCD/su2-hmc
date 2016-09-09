@@ -102,6 +102,8 @@ TEST(hybridMonteCarlo, globalGaugeTransformation) {
 
     auto const transformation = random_from_group(engine, dist);
 
+    auto const old_links = links;
+
     for (int i = 0; i < links.get_size(); ++i) {
         ASSERT_TRUE(is_unitary(links[i]));
         ASSERT_TRUE(is_unit_determinant(links[i]));
@@ -110,6 +112,12 @@ TEST(hybridMonteCarlo, globalGaugeTransformation) {
     for (int i = 0; i < links.get_size(); ++i) {
         ASSERT_TRUE(is_unitary(links[i]));
         ASSERT_TRUE(is_unit_determinant(links[i]));
+    }
+    global_gauge_transformation(transformation.adjoint(), links);
+    for (int i = 0; i < links.get_size(); ++i) {
+        ASSERT_TRUE(is_unitary(links[i]));
+        ASSERT_TRUE(is_unit_determinant(links[i]));
+        ASSERT_TRUE(is_equal(old_links[i], links[i]));
     }
 
 }
