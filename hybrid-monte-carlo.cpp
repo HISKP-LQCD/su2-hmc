@@ -321,15 +321,15 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
     return std::complex<double>{real, imag} / summands;
 }
 
-double get_link_energy(Configuration const &links) {
+double get_link_energy(Configuration const &links, double const beta) {
     auto const identity_trace = Matrix::Identity().trace().real();
     double links_part = 0.0;
     links_part += links.get_volume() * (3 + 2 + 1);
     links_part -= get_plaquette_trace_real(links) / (2 * identity_trace);
-    return links_part;
+    return links_part * beta;
 }
 
-double get_momentum_energy(Configuration const &momenta) {
+double get_momentum_energy(Configuration const &momenta, double const beta) {
     double momentum_part = 0.0;
 #pragma omp parallel for reduction(+ : momentum_part)
     for (int n1 = 0; n1 < momenta.length_time; ++n1) {
@@ -348,9 +348,10 @@ double get_momentum_energy(Configuration const &momenta) {
             }
         }
     }
-     return 0.5 * momentum_part;
+     return 0.5 * momentum_part * (3.0/4.0);
 }
 
-double get_energy(Configuration const &links, Configuration const &momenta) {
-    return get_link_energy(links) + get_momentum_energy(momenta);
+double
+get_energy(Configuration const &links, Configuration const &momenta, double const beta) {
+    return get_link_energy(links, beta) + get_momentum_energy(momenta, beta);
 }

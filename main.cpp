@@ -10,7 +10,7 @@
 #include <iostream>
 #include <random>
 
-//#define OUTPUT
+#define OUTPUT
 
 namespace ptree = boost::property_tree;
 
@@ -55,6 +55,7 @@ int main() {
     std::ofstream ofs_plaquette("plaquette.tsv");
     std::ofstream ofs_energy_reject("energy-reject.tsv");
     std::ofstream ofs_plaquette_reject("plaquette-reject.tsv");
+    std::ofstream ofs_boltzmann("boltzmann.tsv");
 
     int accepted = 0;
     int trials = 0;
@@ -65,16 +66,16 @@ int main() {
         // FIXME The standard deviation here should depend on the time step.
         randomize_algebra(momenta, engine, dist);
 
-        double const old_energy = get_energy(links, momenta);
+        double const old_energy = get_energy(links, momenta, beta);
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
 #ifdef OUTPUT
-            double const old_links_energy = get_link_energy(links);
-            double const old_momentum_energy = get_momentum_energy(momenta);
+            double const old_links_energy = get_link_energy(links, beta);
+            double const old_momentum_energy = get_momentum_energy(momenta, beta);
 #endif
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
 #ifdef OUTPUT
-            double const new_links_energy = get_link_energy(links);
-            double const new_momentum_energy = get_momentum_energy(momenta);
+            double const new_links_energy = get_link_energy(links, beta);
+            double const new_momentum_energy = get_momentum_energy(momenta, beta);
 
             double const links_energy_difference = new_links_energy - old_links_energy;
             double const momentum_energy_difference = new_momentum_energy - old_momentum_energy;
@@ -84,20 +85,21 @@ int main() {
 
             std::cout << "ΔMD Energy: Links = " << links_energy_difference
                       << ", momentum = " << momentum_energy_difference
-                      << ", total = " << energy_difference << std::endl;
+                      << ", total = " << energy_difference << ", ratio = "
+                      << (links_energy_difference / momentum_energy_difference)
+                      << std::endl;
 #endif
         }
 
-        double const new_energy = get_energy(links, momenta);
+        double const new_energy = get_energy(links, momenta, beta);
         double const energy_difference = new_energy - old_energy;
 
-#ifdef OUTPUT
-            std::cout << "HMD Energy: " << old_energy << " → " << new_energy
-                      << "; ΔE = " << energy_difference << std::endl;
-#endif
+        ofs_boltzmann << energy_difference << std::endl;
 
-        double const average_plaquette =
-            get_plaquette_trace_real(links) / (links.get_volume() * 4);
+        std::cout << "HMD Energy: " << old_energy << " → " << new_energy
+                  << "; ΔE = " << energy_difference << std::endl;
+
+        double const average_plaquette = get_average_plaquette(links).real();
 
 #ifdef OUTPUT
         auto const transformation = random_from_group(engine, dist);
@@ -109,6 +111,9 @@ int main() {
                   << average_plaquette_2 << "; Δ = " << plaquette_diference << std::endl;
         assert(is_equal(average_plaquette, average_plaquette_2));
 #endif
+
+        ++trials;
+
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
@@ -122,8 +127,11 @@ int main() {
             ++accepted;
 
             if (chain_skip == 0 || configs_computed % chain_skip == 0) {
-                std::string filename = (config_filename_format % configs_stored).str();
+                /*
+                std::string filename = (config_filename_format %
+               configs_stored).str();
                 links.save(filename);
+                */
                 ++configs_stored;
             }
         } else {
@@ -146,12 +154,5 @@ int main() {
 
         std::cout << "Acceptance rate: " << accepted << " / " << trials << " = "
                   << acceptance_rate << std::endl;
-
-        ++trials;
     }
-
-    std::cout << "Element: ";
-    std::cout << links(0, 0, 0, 0, 0)(0, 0) << std::endl;
-
-    links.save("links.bin");
 }

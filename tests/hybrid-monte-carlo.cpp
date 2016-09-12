@@ -253,22 +253,23 @@ TEST(plaquette, globalGaugeInvariancePlaquetteInvariance) {
 TEST(plaquette, globalGaugeInvarianceAverages) {
     std::mt19937 engine(0);
     std::normal_distribution<double> dist(0, 1);
+    double const beta = 1.0;
 
     Configuration links = make_hot_start(10, 10, 1, 0);
 
     auto const old_plaquette = get_average_plaquette(links);
-    auto const old_energy = get_link_energy(links);
+    auto const old_energy = get_link_energy(links, beta);
 
     Matrix const transformation = random_from_group(engine, dist);
     global_gauge_transformation(transformation, links);
 
     auto const new_plaquette = get_average_plaquette(links);
-    auto const new_energy = get_link_energy(links);
+    auto const new_energy = get_link_energy(links, beta);
 
     global_gauge_transformation(transformation.adjoint(), links);
 
     auto const old2_plaquette = get_average_plaquette(links);
-    auto const old2_energy = get_link_energy(links);
+    auto const old2_energy = get_link_energy(links, beta);
 
     auto const error = 1e-10;
 
