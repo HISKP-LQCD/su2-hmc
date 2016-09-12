@@ -4,4 +4,8 @@
 
 #include <Eigen/Dense>
 
+#include <complex>
+
 using Matrix = Eigen::Matrix2cd;
+
+using Complex = std::complex<double>;

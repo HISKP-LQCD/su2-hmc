@@ -11,7 +11,9 @@
 #include <iostream>
 #include <random>
 
-std::complex<double> constexpr imag_unit{0, 1};
+int constexpr number_of_colors = 2;
+int constexpr adjoint_normalization = 2;
+Complex constexpr imag_unit{0, 1};
 
 void global_gauge_transformation(Matrix const &transformation, Configuration &links) {
     Matrix const adjoint = transformation.adjoint();
@@ -196,7 +198,7 @@ Matrix compute_momentum_derivative(int const n1,
     Matrix staples = get_staples(n1, n2, n3, n4, mu, links);
     Matrix const links_staples = links(n1, n2, n3, n4, mu) * staples;
     Matrix const minus_adjoint = links_staples - links_staples.adjoint().eval();
-    Matrix const derivative = imag_unit * beta / 6.0 * minus_adjoint;
+    Matrix const derivative = imag_unit * beta / (2.0 * number_of_colors) * minus_adjoint;
 
 #ifndef NDEBUG
     if (!is_traceless(derivative)) {
@@ -294,8 +296,6 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
     double real = 0.0;
     double imag = 0.0;
 
-    auto const identity_trace = Matrix::Identity().trace().real();
-
 #pragma omp parallel for reduction(+ : real, imag)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
@@ -317,15 +317,14 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
         }
     }
 
-    double const summands = links.get_volume() * (3 + 2 + 1) * identity_trace;
+    double const summands = links.get_volume() * (3 + 2 + 1) * number_of_colors;
     return std::complex<double>{real, imag} / summands;
 }
 
 double get_link_energy(Configuration const &links, double const beta) {
-    auto const identity_trace = Matrix::Identity().trace().real();
     double links_part = 0.0;
     links_part += links.get_volume() * (3 + 2 + 1);
-    links_part -= get_plaquette_trace_real(links) / (2 * identity_trace);
+    links_part -= get_plaquette_trace_real(links) / (number_of_colors);
     return links_part * beta;
 }
 
@@ -348,7 +347,7 @@ double get_momentum_energy(Configuration const &momenta, double const beta) {
             }
         }
     }
-     return 0.5 * momentum_part * (3.0/4.0);
+     return 0.5 * momentum_part;
 }
 
 double
