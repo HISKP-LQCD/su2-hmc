@@ -66,29 +66,41 @@ int main() {
         // FIXME The standard deviation here should depend on the time step.
         randomize_algebra(momenta, engine, dist);
 
+        double factor_sum = 0.0;
+        int factor_count = 0;
+
         double const old_energy = get_energy(links, momenta, beta);
         for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
-#ifdef OUTPUT
             double const old_links_energy = get_link_energy(links, beta);
             double const old_momentum_energy = get_momentum_energy(momenta, beta);
-#endif
             md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-#ifdef OUTPUT
             double const new_links_energy = get_link_energy(links, beta);
             double const new_momentum_energy = get_momentum_energy(momenta, beta);
 
             double const links_energy_difference = new_links_energy - old_links_energy;
             double const momentum_energy_difference = new_momentum_energy - old_momentum_energy;
 
+            double const factor = -links_energy_difference / momentum_energy_difference;
+
+#ifdef OUTPUT
             double const energy_difference =
                 links_energy_difference + momentum_energy_difference;
 
             std::cout << "ΔMD Energy: Links = " << links_energy_difference
                       << ", momentum = " << momentum_energy_difference
-                      << ", total = " << energy_difference << ", ratio = "
-                      << (links_energy_difference / momentum_energy_difference)
+                      << ", total = " << energy_difference << ", ratio = " << factor
                       << std::endl;
 #endif
+
+            factor_sum += factor;
+            ++factor_count;
+
+            if (factor_count > 5 && std::abs(factor_sum / factor_count - 1) > 0.1) {
+                std::cerr
+                    << "Link and momentum energy transfer does not match up, factor is "
+                    << factor << std::endl;
+                abort();
+            }
         }
 
         double const new_energy = get_energy(links, momenta, beta);
