@@ -138,11 +138,9 @@ int main() {
             ++accepted;
 
             if (chain_skip == 0 || configs_computed % chain_skip == 0) {
-                /*
                 std::string filename = (config_filename_format %
                configs_stored).str();
                 links.save(filename);
-                */
                 ++configs_stored;
             }
         } else {

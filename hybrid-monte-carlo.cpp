@@ -100,7 +100,8 @@ void md_step(Configuration &links,
             }
         }
     }
-// Update `links`.
+    // Update `links`.
+    auto const links_old = links;
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
@@ -108,7 +109,7 @@ void md_step(Configuration &links,
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         links(n1, n2, n3, n4, mu) = compute_new_link(
-                            n1, n2, n3, n4, mu, links, momenta_half, time_step);
+                            n1, n2, n3, n4, mu, links_old, momenta_half, time_step);
                     }
                 }
             }

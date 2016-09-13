@@ -71,6 +71,17 @@ add_executable(su2-hmc
 
     )
 
+add_executable(exporter
+
+    configuration.cpp
+    hybrid-monte-carlo.cpp
+    povray.cpp
+    pauli-matrices.cpp
+    sanity-checks.cpp
+    su2matrix.cpp
+
+    )
+
 target_link_libraries(su2-hmc ${Boost_LIBS})
 
 add_subdirectory(tests)

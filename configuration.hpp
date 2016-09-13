@@ -46,6 +46,7 @@ class Configuration {
     int get_size() const { return data.size(); }
 
     void save(std::string const &path) const;
+    void load(std::string const &path);
 
 
   private:
