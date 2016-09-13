@@ -12,7 +12,6 @@
 #include <random>
 
 int constexpr number_of_colors = 2;
-int constexpr adjoint_normalization = 2;
 Complex constexpr imag_unit{0, 1};
 
 void global_gauge_transformation(Matrix const &transformation, Configuration &links) {
@@ -267,32 +266,7 @@ Matrix get_plaquette(int const n1,
     return plaquette;
 }
 
-double get_plaquette_trace_real(Configuration const &links) {
-    double sum = 0.0;
-
-#pragma omp parallel for reduction(+ : sum)
-    for (int n1 = 0; n1 < links.length_time; ++n1) {
-        for (int n2 = 0; n2 < links.length_space; ++n2) {
-            for (int n3 = 0; n3 < links.length_space; ++n3) {
-                for (int n4 = 0; n4 < links.length_space; ++n4) {
-                    for (int mu = 0; mu < 4; ++mu) {
-                        for (int nu = 0; nu < mu; ++nu) {
-                            Matrix const plaquette =
-                                get_plaquette(n1, n2, n3, n4, mu, nu, links);
-                            double const summand = plaquette.trace().real();
-                            assert(std::isfinite(summand));
-                            sum += summand;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return sum;
-}
-
-std::complex<double> get_average_plaquette(Configuration const &links) {
+std::complex<double> get_plaquette_trace_sum(Configuration const &links) {
     double real = 0.0;
     double imag = 0.0;
 
@@ -317,14 +291,18 @@ std::complex<double> get_average_plaquette(Configuration const &links) {
         }
     }
 
+    return std::complex<double>{real, imag};
+}
+
+std::complex<double> get_plaquette_trace_average(Configuration const &links) {
     double const summands = links.get_volume() * (3 + 2 + 1) * number_of_colors;
-    return std::complex<double>{real, imag} / summands;
+    return get_plaquette_trace_sum(links) / summands;
 }
 
 double get_link_energy(Configuration const &links, double const beta) {
     double links_part = 0.0;
     links_part += links.get_volume() * (3 + 2 + 1);
-    links_part -= get_plaquette_trace_real(links) / (number_of_colors);
+    links_part -= get_plaquette_trace_sum(links).real() / (number_of_colors);
     return links_part * beta;
 }
 

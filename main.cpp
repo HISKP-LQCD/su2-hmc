@@ -99,13 +99,13 @@ int main() {
         std::cout << "HMD Energy: " << old_energy << " → " << new_energy
                   << "; ΔE = " << energy_difference << std::endl;
 
-        double const average_plaquette = get_average_plaquette(links).real();
+        double const average_plaquette = get_plaquette_trace_average(links).real();
 
 #ifdef OUTPUT
         auto const transformation = random_from_group(engine, dist);
         global_gauge_transformation(transformation, links);
         double const average_plaquette_2 =
-            get_plaquette_trace_real(links) / (links.get_volume() * 4);
+            get_plaquette_trace_average(links).real() / (links.get_volume() * 4);
         double const plaquette_diference = average_plaquette_2 - average_plaquette;
         std::cout << "Global transform: " << average_plaquette << " → "
                   << average_plaquette_2 << "; Δ = " << plaquette_diference << std::endl;

@@ -257,18 +257,18 @@ TEST(plaquette, globalGaugeInvarianceAverages) {
 
     Configuration links = make_hot_start(10, 10, 1, 0);
 
-    auto const old_plaquette = get_average_plaquette(links);
+    auto const old_plaquette = get_plaquette_trace_average(links);
     auto const old_energy = get_link_energy(links, beta);
 
     Matrix const transformation = random_from_group(engine, dist);
     global_gauge_transformation(transformation, links);
 
-    auto const new_plaquette = get_average_plaquette(links);
+    auto const new_plaquette = get_plaquette_trace_average(links);
     auto const new_energy = get_link_energy(links, beta);
 
     global_gauge_transformation(transformation.adjoint(), links);
 
-    auto const old2_plaquette = get_average_plaquette(links);
+    auto const old2_plaquette = get_plaquette_trace_average(links);
     auto const old2_energy = get_link_energy(links, beta);
 
     auto const error = 1e-10;
@@ -290,7 +290,7 @@ TEST(hybridMonteCarlo, coldStartAveragePlaquette) {
     for (int i = 0; i < links.get_size(); ++i) {
         links[i] = Matrix::Identity();
     }
-    auto const average_plaquette = get_average_plaquette(links);
+    auto const average_plaquette = get_plaquette_trace_average(links);
     ASSERT_DOUBLE_EQ(1.0, average_plaquette.real());
     ASSERT_DOUBLE_EQ(0.0, average_plaquette.imag());
 }
