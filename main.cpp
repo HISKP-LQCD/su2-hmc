@@ -128,7 +128,7 @@ int main() {
 
         // Accept-Reject.
         if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
-            std::cout << "\tAccepted.\n";
+            std::cout << "Accepted.\n";
 
             ofs_energy << configs_computed << "\t" << (new_energy / links.get_volume())
                        << std::endl;
@@ -146,7 +146,7 @@ int main() {
                 ++configs_stored;
             }
         } else {
-            std::cout << "\tRejected.\n";
+            std::cout << "Rejected.\n";
             links = old_links;
 
             ofs_energy_reject << configs_computed << "\t"
@@ -164,6 +164,7 @@ int main() {
         auto const acceptance_rate = static_cast<double>(accepted) / trials;
 
         std::cout << "Acceptance rate: " << accepted << " / " << trials << " = "
-                  << acceptance_rate << std::endl;
+                  << acceptance_rate << "\n"
+                  << std::endl;
     }
 }
