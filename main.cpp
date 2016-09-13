@@ -116,8 +116,7 @@ int main() {
 #ifdef OUTPUT
         auto const transformation = random_from_group(engine, dist);
         global_gauge_transformation(transformation, links);
-        double const average_plaquette_2 =
-            get_plaquette_trace_average(links).real() / (links.get_volume() * 4);
+        double const average_plaquette_2 = get_plaquette_trace_average(links).real();
         double const plaquette_diference = average_plaquette_2 - average_plaquette;
         std::cout << "Global transform: " << average_plaquette << " → "
                   << average_plaquette_2 << "; Δ = " << plaquette_diference << std::endl;
