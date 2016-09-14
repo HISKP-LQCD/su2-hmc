@@ -295,6 +295,28 @@ TEST(hybridMonteCarlo, coldStartAveragePlaquette) {
     ASSERT_DOUBLE_EQ(0.0, average_plaquette.imag());
 }
 
+TEST(hybridMonteCarlo, plaquetteNormalization) {
+    Configuration links = make_hot_start(10, 10, 1, 0);
+
+    for (int n1 = 0; n1 < links.length_time; ++n1) {
+        for (int n2 = 0; n2 < links.length_space; ++n2) {
+            for (int n3 = 0; n3 < links.length_space; ++n3) {
+                for (int n4 = 0; n4 < links.length_space; ++n4) {
+                    for (int mu = 0; mu < 4; ++mu) {
+                        for (int nu = 0; nu < 4; ++nu) {
+                            Matrix const plaquette =
+                                get_plaquette(n1, n2, n3, n4, mu, nu, links);
+                            ASSERT_LE(std::abs(plaquette.trace().real()), 2.0001);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+}
+
 TEST(hybridMonteCarlo, singlePlaquette) {
     std::mt19937 engine(0);
     std::normal_distribution<double> dist(0, 1);
