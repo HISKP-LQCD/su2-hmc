@@ -7,23 +7,25 @@
 #include <iostream>
 
 int get_color(Matrix const &link, int const index) {
-    double const pi = std::acos(-1);
     PauliMatrices const &pauli_matrices = PauliMatrices::get_instance();
+    double const pi = std::acos(-1);
 
-    auto const trace = (link * pauli_matrices.get(index)).trace();
-    auto const real = trace.real();
+    Matrix const algebra = link.log();
+    auto const trace = (algebra * pauli_matrices.get(index)).trace();
+    auto const real = trace.imag();
     auto const abs = std::abs(real);
 
-    auto const result = abs * 1e15;
+    auto const result = abs / (2 * pi) * 255;
+
     std::cerr << result << "\n";
     return result;
 }
 
 int main() {
     Configuration links(8, 8);
-    links.load("gauge-links-0039.bin");
+    links.load("gauge-links-0000.bin");
 
-    int const max = 3;
+    int const max = 5;
 
 
     // for (int n1 = 0; n1 < links.length_time; ++n1) {
@@ -42,16 +44,16 @@ int main() {
                     std::cout << "cylinder {\n"
                                  "<0, 0, 0> <0, 0, 1> rad\n"
                                  "pigment { color rgb<"
-                              << red << ", " << green << ", " << blue << "> }\n"
-                                                                         "translate <"
-                              << x << ", " << y << ", " << z << ">\n";
-                    if (mu == 2)
+                              << red << ", " << green << ", " << blue << "> }\n";
+                    if (mu == 2) {
                         std::cout << "rotate <-90, 0, 0>\n";
-                    else if (mu == 3)
+                    } else if (mu == 3) {
                         std::cout << "rotate <0, 90, 0>\n";
+                    }
+                    std::cout << "translate <" << x << ", " << y << ", " << z << ">\n";
 
-                    std::cout << "finish {phong 1}\n"
-                                 "no_shadow\n"
+                    //std::cout << "finish {phong 1}\n";
+                    std::cout << "no_shadow\n"
                                  "} \n";
                 }
             }
