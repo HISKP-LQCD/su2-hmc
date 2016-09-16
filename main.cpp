@@ -97,9 +97,9 @@ int main() {
 
             if (factor_count > 5 && std::abs(factor_sum / factor_count - 1) > 0.1) {
                 std::cerr
-                    << "Link and momentum energy transfer does not match up, factor is "
+                    << "WARNUNG: Link and momentum energy transfer does not match up, factor is "
                     << factor << std::endl;
-                abort();
+                //abort();
             }
         }
 
