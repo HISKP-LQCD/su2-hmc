@@ -34,6 +34,8 @@ int main() {
     int const length_time = config.get<int>("lattice.length_time");
     int const length_space = config.get<int>("lattice.length_space");
 
+    bool const do_write_config = config.get<bool>("output.links", false);
+
     auto links = make_hot_start(length_space, length_time,
                                 config.get<double>("init.hot_start_std"),
                                 config.get<int>("init.seed"));
@@ -60,7 +62,7 @@ int main() {
     int accepted = 0;
     int trials = 0;
 
-    while (configs_stored < chain_total) {
+    while (accepted < chain_total) {
         Configuration const old_links = links;
 
         // FIXME The standard deviation here should depend on the time step.
@@ -137,7 +139,8 @@ int main() {
             ++configs_computed;
             ++accepted;
 
-            if (chain_skip == 0 || configs_computed % chain_skip == 0) {
+            if (do_write_config &&
+                (chain_skip == 0 || configs_computed % chain_skip == 0)) {
                 std::string filename = (config_filename_format %
                configs_stored).str();
                 links.save(filename);
