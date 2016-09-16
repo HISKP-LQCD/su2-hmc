@@ -198,7 +198,8 @@ Matrix compute_momentum_derivative(int const n1,
     Matrix staples = get_staples(n1, n2, n3, n4, mu, links);
     Matrix const links_staples = links(n1, n2, n3, n4, mu) * staples;
     Matrix const minus_adjoint = links_staples - links_staples.adjoint().eval();
-    Matrix const derivative = imag_unit * beta / (2.0 * number_of_colors) * minus_adjoint;
+    Matrix const derivative =
+        imag_unit * beta / static_cast<double>(number_of_colors) * minus_adjoint;
 
 #ifndef NDEBUG
     if (!is_traceless(derivative)) {
@@ -303,7 +304,7 @@ std::complex<double> get_plaquette_trace_average(Configuration const &links) {
 double get_link_energy(Configuration const &links, double const beta) {
     double links_part = 0.0;
     links_part += links.get_volume() * (3 + 2 + 1);
-    links_part -= get_plaquette_trace_sum(links).real() / (number_of_colors);
+    links_part -= get_plaquette_trace_sum(links).real();
     return links_part * beta;
 }
 
