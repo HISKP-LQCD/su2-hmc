@@ -67,7 +67,6 @@ add_executable(su2-hmc
     main.cpp
     pauli-matrices.cpp
     sanity-checks.cpp
-    su2matrix.cpp
 
     )
 
@@ -78,7 +77,6 @@ add_executable(exporter
     povray.cpp
     pauli-matrices.cpp
     sanity-checks.cpp
-    su2matrix.cpp
 
     )
 

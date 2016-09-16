@@ -5,7 +5,6 @@ add_executable(tests
     ../hybrid-monte-carlo.cpp
     ../pauli-matrices.cpp
     ../sanity-checks.cpp
-    ../su2matrix.cpp
     hybrid-monte-carlo.cpp
     main.cpp
     pauli-matrices.cpp
