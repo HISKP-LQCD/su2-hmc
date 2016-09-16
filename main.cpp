@@ -58,11 +58,12 @@ int main() {
     std::ofstream ofs_energy_reject("energy-reject.tsv");
     std::ofstream ofs_plaquette_reject("plaquette-reject.tsv");
     std::ofstream ofs_boltzmann("boltzmann.tsv");
+    std::ofstream ofs_accept("accept.tsv");
 
-    int accepted = 0;
+    int number_accepted = 0;
     int trials = 0;
 
-    while (accepted < chain_total) {
+    while (number_accepted < chain_total) {
         Configuration const old_links = links;
 
         // FIXME The standard deviation here should depend on the time step.
@@ -129,7 +130,9 @@ int main() {
 
 
         // Accept-Reject.
-        if (energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine)) {
+        const bool accepted =
+            energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine);
+        if (accepted) {
             std::cout << "Accepted.\n";
 
             ofs_energy << configs_computed << "\t" << (new_energy / links.get_volume())
@@ -137,7 +140,7 @@ int main() {
             ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
 
             ++configs_computed;
-            ++accepted;
+            ++number_accepted;
 
             if (do_write_config &&
                 (chain_skip == 0 || configs_computed % chain_skip == 0)) {
@@ -156,15 +159,17 @@ int main() {
                                  << std::endl;
         }
 
+        ofs_accept << (accepted ? 1 : 0) << std::endl;
+
 #ifdef OUTPUT
         std::cout << "Plaquette: " << average_plaquette << std::endl;
         std::cout << "Plaquette after global SU(2) transformation: "
                   << average_plaquette_2 << std::endl;
 #endif
 
-        auto const acceptance_rate = static_cast<double>(accepted) / trials;
+        auto const acceptance_rate = static_cast<double>(number_accepted) / trials;
 
-        std::cout << "Acceptance rate: " << accepted << " / " << trials << " = "
+        std::cout << "Acceptance rate: " << number_accepted << " / " << trials << " = "
                   << acceptance_rate << "\n"
                   << std::endl;
     }
