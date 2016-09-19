@@ -50,9 +50,6 @@ int main() {
     Configuration momenta(length_space, length_time);
     Configuration momenta_half(length_space, length_time);
 
-    int configs_stored = 0;
-    int configs_computed = 0;
-
     std::ofstream ofs_energy("energy.tsv");
     std::ofstream ofs_plaquette("plaquette.tsv");
     std::ofstream ofs_energy_reject("energy-reject.tsv");
@@ -60,10 +57,11 @@ int main() {
     std::ofstream ofs_boltzmann("boltzmann.tsv");
     std::ofstream ofs_accept("accept.tsv");
 
+    int number_stored = 0;
+    int number_computed = 0;
     int number_accepted = 0;
-    int trials = 0;
 
-    while (number_accepted < chain_total) {
+    while (number_computed < chain_total) {
         Configuration const old_links = links;
 
         // FIXME The standard deviation here should depend on the time step.
@@ -126,7 +124,7 @@ int main() {
         assert(is_equal(average_plaquette, average_plaquette_2));
 #endif
 
-        ++trials;
+        ++number_computed;
 
 
         // Accept-Reject.
@@ -135,28 +133,27 @@ int main() {
         if (accepted) {
             std::cout << "Accepted.\n";
 
-            ofs_energy << configs_computed << "\t" << (new_energy / links.get_volume())
+            ofs_energy << number_computed << "\t" << (new_energy / links.get_volume())
                        << std::endl;
-            ofs_plaquette << configs_computed << "\t" << average_plaquette << std::endl;
+            ofs_plaquette << number_computed << "\t" << average_plaquette << std::endl;
 
-            ++configs_computed;
             ++number_accepted;
-
-            if (do_write_config &&
-                (chain_skip == 0 || configs_computed % chain_skip == 0)) {
-                std::string filename = (config_filename_format %
-               configs_stored).str();
-                links.save(filename);
-                ++configs_stored;
-            }
         } else {
             std::cout << "Rejected.\n";
             links = old_links;
 
-            ofs_energy_reject << configs_computed << "\t"
+            ofs_energy_reject << number_computed << "\t"
                               << (new_energy / links.get_volume()) << std::endl;
-            ofs_plaquette_reject << configs_computed << "\t" << average_plaquette
+            ofs_plaquette_reject << number_computed << "\t" << average_plaquette
                                  << std::endl;
+        }
+
+        if (do_write_config &&
+            (chain_skip == 0 || number_computed % chain_skip == 0)) {
+            std::string filename = (config_filename_format %
+           number_stored).str();
+            links.save(filename);
+            ++number_stored;
         }
 
         ofs_accept << (accepted ? 1 : 0) << std::endl;
@@ -167,9 +164,9 @@ int main() {
                   << average_plaquette_2 << std::endl;
 #endif
 
-        auto const acceptance_rate = static_cast<double>(number_accepted) / trials;
+        auto const acceptance_rate = static_cast<double>(number_accepted) / number_computed;
 
-        std::cout << "Acceptance rate: " << number_accepted << " / " << trials << " = "
+        std::cout << "Acceptance rate: " << number_accepted << " / " << number_computed << " = "
                   << acceptance_rate << "\n"
                   << std::endl;
     }
