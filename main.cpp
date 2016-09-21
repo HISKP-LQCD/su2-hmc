@@ -6,6 +6,7 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/filesystem.hpp>
 
 #include <iostream>
 #include <random>
@@ -14,14 +15,19 @@
 
 namespace ptree = boost::property_tree;
 
+void abort_if_dirty() {
+    if (boost::filesystem::exists("plaquette.tsv")) {
+        std::cerr << "File plaquette.tsv exists, aborting. To re-run this, delete the "
+                     "output files."
+                  << std::endl;
+        abort();
+    }
+}
+
 int main() {
-    std::mt19937 engine;
-    std::normal_distribution<double> dist(0, 1);
-    std::uniform_real_distribution<double> uniform(0, 1);
+    abort_if_dirty();
 
     std::cout << "sizeof(value_type): " << sizeof(Configuration::value_type) << std::endl;
-
-    boost::format config_filename_format("gauge-links-%04d.bin");
 
     ptree::ptree config;
     try {
@@ -31,21 +37,18 @@ int main() {
         abort();
     }
 
-    int const length_time = config.get<int>("lattice.length_time");
-    int const length_space = config.get<int>("lattice.length_space");
-
     bool const do_write_config = config.get<bool>("output.links", false);
+    double const beta = config.get<double>("md.beta");
+    double const time_step = config.get<double>("md.time_step");
+    int const chain_skip = config.get<int>("chain.skip");
+    int const chain_total = config.get<int>("chain.total");
+    int const length_space = config.get<int>("lattice.length_space");
+    int const length_time = config.get<int>("lattice.length_time");
+    int const md_steps = config.get<int>("md.steps");
 
     auto links = make_hot_start(length_space, length_time,
                                 config.get<double>("init.hot_start_std"),
                                 config.get<int>("init.seed"));
-
-    const double time_step = config.get<double>("md.time_step");
-    const double beta = config.get<double>("md.beta");
-
-    const int chain_total = config.get<int>("chain.total");
-    const int chain_skip = config.get<int>("chain.skip");
-    const int md_steps = config.get<int>("md.steps");
 
     Configuration momenta(length_space, length_time);
     Configuration momenta_half(length_space, length_time);
@@ -61,10 +64,15 @@ int main() {
     int number_computed = 0;
     int number_accepted = 0;
 
+    boost::format config_filename_format("gauge-links-%04d.bin");
+
+    std::mt19937 engine;
+    std::normal_distribution<double> dist(0, 1);
+    std::uniform_real_distribution<double> uniform(0, 1);
+
     while (number_computed < chain_total) {
         Configuration const old_links = links;
 
-        // FIXME The standard deviation here should depend on the time step.
         randomize_algebra(momenta, engine, dist);
 
         double factor_sum = 0.0;
@@ -108,6 +116,9 @@ int main() {
         double const energy_difference = new_energy - old_energy;
 
         ofs_boltzmann << energy_difference << std::endl;
+        ofs_energy << number_computed << "\t" << (new_energy / links.get_volume())
+            << std::endl;
+        ofs_plaquette << number_computed << "\t" << average_plaquette << std::endl;
 
         std::cout << "HMD Energy: " << old_energy << " → " << new_energy
                   << "; ΔE = " << energy_difference << std::endl;
@@ -126,16 +137,11 @@ int main() {
 
         ++number_computed;
 
-
         // Accept-Reject.
         const bool accepted =
             energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine);
         if (accepted) {
             std::cout << "Accepted.\n";
-
-            ofs_energy << number_computed << "\t" << (new_energy / links.get_volume())
-                       << std::endl;
-            ofs_plaquette << number_computed << "\t" << average_plaquette << std::endl;
 
             ++number_accepted;
         } else {

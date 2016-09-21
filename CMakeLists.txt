@@ -18,7 +18,7 @@ add_definitions("-march=native")
 add_definitions("-std=c++11")
 #add_definitions("-Werror")
 add_definitions("-Wall")
-#add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
+add_definitions(-DBOOST_FILESYSTEM_NO_DEPRECATED)
 
 ###############################################################################
 #                                Compile flags                                #
@@ -51,7 +51,7 @@ else()
     add_definitions("-Wno-unknown-pragmas")
 endif()
 
-find_package(Boost REQUIRED COMPONENTS)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 find_package(Eigen3 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
@@ -80,6 +80,6 @@ add_executable(exporter
 
     )
 
-target_link_libraries(su2-hmc ${Boost_LIBS})
+target_link_libraries(su2-hmc ${Boost_LIBRARIES})
 
 add_subdirectory(tests)
