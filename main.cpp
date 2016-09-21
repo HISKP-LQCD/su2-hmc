@@ -108,50 +108,33 @@ int main() {
                 std::cerr
                     << "WARNUNG: Link and momentum energy transfer does not match up, factor is "
                     << factor << std::endl;
-                //abort();
             }
         }
+
+        ++number_computed;
 
         double const new_energy = get_energy(links, momenta, beta);
         double const energy_difference = new_energy - old_energy;
 
-        ofs_boltzmann << energy_difference << std::endl;
-        ofs_energy << number_computed << "\t" << (new_energy / links.get_volume())
-            << std::endl;
-        ofs_plaquette << number_computed << "\t" << average_plaquette << std::endl;
-
         std::cout << "HMD Energy: " << old_energy << " → " << new_energy
                   << "; ΔE = " << energy_difference << std::endl;
-
-        double const average_plaquette = get_plaquette_trace_average(links).real();
-
-#ifdef OUTPUT
-        auto const transformation = random_from_group(engine, dist);
-        global_gauge_transformation(transformation, links);
-        double const average_plaquette_2 = get_plaquette_trace_average(links).real();
-        double const plaquette_diference = average_plaquette_2 - average_plaquette;
-        std::cout << "Global transform: " << average_plaquette << " → "
-                  << average_plaquette_2 << "; Δ = " << plaquette_diference << std::endl;
-        assert(is_equal(average_plaquette, average_plaquette_2));
-#endif
-
-        ++number_computed;
 
         // Accept-Reject.
         const bool accepted =
             energy_difference <= 0 || std::exp(-energy_difference) >= uniform(engine);
         if (accepted) {
             std::cout << "Accepted.\n";
-
             ++number_accepted;
         } else {
             std::cout << "Rejected.\n";
-            links = old_links;
 
             ofs_energy_reject << number_computed << "\t"
                               << (new_energy / links.get_volume()) << std::endl;
-            ofs_plaquette_reject << number_computed << "\t" << average_plaquette
+            ofs_plaquette_reject << number_computed << "\t"
+                                 << get_plaquette_trace_average(links).real()
                                  << std::endl;
+
+            links = old_links;
         }
 
         if (do_write_config &&
@@ -162,18 +145,15 @@ int main() {
             ++number_stored;
         }
 
-        ofs_accept << (accepted ? 1 : 0) << std::endl;
-
-#ifdef OUTPUT
-        std::cout << "Plaquette: " << average_plaquette << std::endl;
-        std::cout << "Plaquette after global SU(2) transformation: "
-                  << average_plaquette_2 << std::endl;
-#endif
-
-        auto const acceptance_rate = static_cast<double>(number_accepted) / number_computed;
-
-        std::cout << "Acceptance rate: " << number_accepted << " / " << number_computed << " = "
-                  << acceptance_rate << "\n"
+        auto const acceptance_rate =
+            static_cast<double>(number_accepted) / number_computed;
+        std::cout << "Acceptance rate: " << number_accepted << " / " << number_computed
+                  << " = " << acceptance_rate << "\n"
                   << std::endl;
+
+        double const average_plaquette = get_plaquette_trace_average(links).real();
+        ofs_accept << (accepted ? 1 : 0) << std::endl;
+        ofs_boltzmann << energy_difference << std::endl;
+        ofs_plaquette << number_computed << "\t" << average_plaquette << std::endl;
     }
 }
