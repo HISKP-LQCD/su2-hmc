@@ -53,12 +53,10 @@ int main() {
     Configuration momenta(length_space, length_time);
     Configuration momenta_half(length_space, length_time);
 
-    std::ofstream ofs_energy("energy.tsv");
-    std::ofstream ofs_plaquette("plaquette.tsv");
-    std::ofstream ofs_energy_reject("energy-reject.tsv");
-    std::ofstream ofs_plaquette_reject("plaquette-reject.tsv");
-    std::ofstream ofs_boltzmann("boltzmann.tsv");
     std::ofstream ofs_accept("accept.tsv");
+    std::ofstream ofs_boltzmann("boltzmann.tsv");
+    std::ofstream ofs_plaquette("plaquette.tsv");
+    std::ofstream ofs_plaquette_reject("plaquette-reject.tsv");
 
     int number_stored = 0;
     int number_computed = 0;
@@ -128,8 +126,6 @@ int main() {
         } else {
             std::cout << "Rejected.\n";
 
-            ofs_energy_reject << number_computed << "\t"
-                              << (new_energy / links.get_volume()) << std::endl;
             ofs_plaquette_reject << number_computed << "\t"
                                  << get_plaquette_trace_average(links).real()
                                  << std::endl;
