@@ -22,44 +22,13 @@ double md_evolution(Configuration &links,
 
     randomize_algebra(momenta, engine, dist);
 
-    double factor_sum = 0.0;
-    int factor_count = 0;
-
     double const old_energy = get_energy(links, momenta, beta);
 
     md_momentum_half_step(links, momenta, momenta_half, engine, dist, time_step, beta);
     md_link_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-
     for (int md_step_idx = 1; md_step_idx != md_steps; ++md_step_idx) {
-        double const old_links_energy = get_link_energy(links, beta);
-        double const old_momentum_energy = get_momentum_energy(momenta, beta);
         md_momentum_step(links, momenta, momenta_half, engine, dist, time_step, beta);
         md_link_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-        double const new_links_energy = get_link_energy(links, beta);
-        double const new_momentum_energy = get_momentum_energy(momenta, beta);
-
-        double const links_energy_difference = new_links_energy - old_links_energy;
-        double const momentum_energy_difference =
-            new_momentum_energy - old_momentum_energy;
-
-        double const factor = -links_energy_difference / momentum_energy_difference;
-
-        double const energy_difference =
-            links_energy_difference + momentum_energy_difference;
-
-        std::cout << "ΔMD Energy: Links = " << links_energy_difference
-                  << ", momentum = " << momentum_energy_difference
-                  << ", total = " << energy_difference << ", ratio = " << factor
-                  << std::endl;
-
-        factor_sum += factor;
-        ++factor_count;
-
-        if (factor_count > 5 && std::abs(factor_sum / factor_count - 1) > 0.1) {
-            std::cerr << "WARNUNG: Link and momentum energy transfer does not match up, "
-                         "factor is "
-                      << factor << std::endl;
-        }
     }
     md_momentum_half_step(links, momenta, momenta_half, engine, dist, time_step, beta);
 
