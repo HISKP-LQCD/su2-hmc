@@ -2,16 +2,17 @@
 
 #pragma once
 
-#include <Eigen/Dense>
+#include "matrix.hpp"
 
 #include <complex>
+#include <random>
 #include <vector>
 
 class PauliMatrices {
     using value_type = std::complex<double>;
 
   public:
-    Eigen::Matrix2cd const get(int i) const { return matrices[i]; }
+    Matrix const get(int i) const { return matrices[i]; }
 
     static PauliMatrices &get_instance() {
         static PauliMatrices instance;
@@ -21,5 +22,9 @@ class PauliMatrices {
   private:
     PauliMatrices();
 
-    std::vector<Eigen::Matrix2cd> matrices;
+    std::vector<Matrix> matrices;
 };
+
+Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double> &dist);
+Matrix random_from_group(std::mt19937 &engine, std::normal_distribution<double> &dist);
+Matrix group_from_algebra(Matrix const &algebra_element);

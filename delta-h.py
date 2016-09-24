@@ -26,12 +26,11 @@ def autocorrelation_time(data):
     ax.set_ylabel(r'Autocorrelation $\Gamma(t)$')
     ax.plot(autocorrelation)
     ax.margins(0.05)
+    ax.grid(True)
     fig.tight_layout()
     fig.savefig('corr.pdf')
 
     integral = sp.integrate.trapz(autocorrelation)
-    print(integral)
-    integral = sp.integrate.quad(autocorrelation)
     print(integral)
     print(np.sum(autocorrelation))
 
@@ -39,9 +38,14 @@ def autocorrelation_time(data):
 def main():
     options = _parse_args()
 
-    delta_h = np.loadtxt(options.filename)
+    data = np.loadtxt(options.filename)
+    shape = data.shape
+    if len(shape) == 1:
+        delta_h = data
+    else:
+        delta_h = data[:, 1]
 
-    boltzmann = np.exp(- delta_h)[100:]
+    boltzmann = np.exp(- delta_h)[20:]
 
     autocorrelation_time(boltzmann)
 
@@ -68,19 +72,44 @@ def main():
         ms.append(np.mean(stds))
         ss.append(np.std(stds))
 
+    mm = np.array(mm)
+    ms = np.array(ms)
+    sm = np.array(sm)
+    ss = np.array(ss)
+
     fig = pl.figure()
 
-    ax = fig.add_subplot(2, 1, 1)
-    ax.errorbar(block_lens, mm, yerr=sm)
+    ax = fig.add_subplot(2, 2, 1)
+    #ax.errorbar(block_lens, mm, yerr=sm)
+    ax.fill_between(block_lens, mm - sm, mm + sm, alpha=0.3, linewidth=0)
+    ax.plot(block_lens, mm)
     ax.set_xlabel('Block size')
-    ax.set_ylabel('Mean of blocked mean$')
+    ax.set_ylabel('Mean of blocked mean')
     ax.margins(0.05)
+    ax.grid(True)
 
-    ax = fig.add_subplot(2, 1, 2)
-    ax.errorbar(block_lens, ms, yerr=ss)
+    ax = fig.add_subplot(2, 2, 3)
+    ax.plot(block_lens, sm)
+    ax.set_xlabel('Block size')
+    ax.set_ylabel('Std of blocked mean')
+    ax.margins(0.05)
+    ax.grid(True)
+
+    ax = fig.add_subplot(2, 2, 2)
+    #ax.errorbar(block_lens, ms, yerr=ss)
+    ax.fill_between(block_lens, ms - ss, ms + ss, alpha=0.3, linewidth=0)
+    ax.plot(block_lens, ms)
     ax.set_xlabel('Block size')
     ax.set_ylabel('Mean of blocked std')
     ax.margins(0.05)
+    ax.grid(True)
+
+    ax = fig.add_subplot(2, 2, 4)
+    ax.plot(block_lens, ss)
+    ax.set_xlabel('Block size')
+    ax.set_ylabel('Std of blocked std')
+    ax.margins(0.05)
+    ax.grid(True)
 
     fig.tight_layout()
     fig.savefig('1-errs.pdf')
@@ -88,6 +117,9 @@ def main():
     fig = pl.figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.hist(boltzmann)
+    ax.set_xlabel(r'$\exp(-\Delta H)$')
+    ax.set_ylabel('Counts')
+    fig.tight_layout()
     fig.savefig('delta-h.pdf')
 
 

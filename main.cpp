@@ -11,7 +11,7 @@
 #include <iostream>
 #include <random>
 
-#define OUTPUT
+//#define OUTPUT
 
 namespace ptree = boost::property_tree;
 
@@ -50,8 +50,6 @@ int main() {
                                 config.get<double>("init.hot_start_std"),
                                 config.get<int>("init.seed"));
 
-    Configuration momenta(length_space, length_time);
-    Configuration momenta_half(length_space, length_time);
 
     std::ofstream ofs_accept("accept.tsv");
     std::ofstream ofs_boltzmann("boltzmann.tsv");
@@ -70,52 +68,9 @@ int main() {
 
     while (number_computed < chain_total) {
         Configuration const old_links = links;
-
-        randomize_algebra(momenta, engine, dist);
-
-        double factor_sum = 0.0;
-        int factor_count = 0;
-
-        double const old_energy = get_energy(links, momenta, beta);
-        for (int md_step_idx = 0; md_step_idx != md_steps; ++md_step_idx) {
-            double const old_links_energy = get_link_energy(links, beta);
-            double const old_momentum_energy = get_momentum_energy(momenta, beta);
-            md_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-            double const new_links_energy = get_link_energy(links, beta);
-            double const new_momentum_energy = get_momentum_energy(momenta, beta);
-
-            double const links_energy_difference = new_links_energy - old_links_energy;
-            double const momentum_energy_difference = new_momentum_energy - old_momentum_energy;
-
-            double const factor = -links_energy_difference / momentum_energy_difference;
-
-#ifdef OUTPUT
-            double const energy_difference =
-                links_energy_difference + momentum_energy_difference;
-
-            std::cout << "ΔMD Energy: Links = " << links_energy_difference
-                      << ", momentum = " << momentum_energy_difference
-                      << ", total = " << energy_difference << ", ratio = " << factor
-                      << std::endl;
-#endif
-
-            factor_sum += factor;
-            ++factor_count;
-
-            if (factor_count > 5 && std::abs(factor_sum / factor_count - 1) > 0.1) {
-                std::cerr
-                    << "WARNUNG: Link and momentum energy transfer does not match up, factor is "
-                    << factor << std::endl;
-            }
-        }
-
+        double const energy_difference =
+            md_evolution(links, engine, dist, time_step, md_steps, beta);
         ++number_computed;
-
-        double const new_energy = get_energy(links, momenta, beta);
-        double const energy_difference = new_energy - old_energy;
-
-        std::cout << "HMD Energy: " << old_energy << " → " << new_energy
-                  << "; ΔE = " << energy_difference << std::endl;
 
         // Accept-Reject.
         const bool accepted =
