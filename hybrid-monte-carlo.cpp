@@ -11,96 +11,40 @@
 #include <iostream>
 #include <random>
 
-int constexpr number_of_colors = 2;
-Complex constexpr imag_unit{0, 1};
+double md_evolution(Configuration &links,
+                    std::mt19937 &engine,
+                    std::normal_distribution<double> &dist,
+                    double const time_step,
+                    int const md_steps,
+                    double const beta) {
+    Configuration momenta(links.length_space, links.length_time);
+    randomize_algebra(momenta, engine, dist);
 
-void global_gauge_transformation(Matrix const &transformation, Configuration &links) {
-    Matrix const adjoint = transformation.adjoint();
-    for (int i = 0; i < links.get_size(); ++i) {
-        links[i] = transformation * links[i] * adjoint;
+    double const old_energy = get_energy(links, momenta, beta);
+
+    md_momentum_step(links, momenta, engine, dist, time_step / 2, beta);
+    md_link_step(links, momenta, engine, dist, time_step, beta);
+    for (int md_step_idx = 1; md_step_idx != md_steps; ++md_step_idx) {
+        md_momentum_step(links, momenta,engine, dist, time_step, beta);
+        md_link_step(links, momenta, engine, dist, time_step, beta);
     }
+    md_momentum_step(links, momenta, engine, dist, time_step / 2, beta);
+
+    double const new_energy = get_energy(links, momenta, beta);
+    double const energy_difference = new_energy - old_energy;
+
+    std::cout << "HMD Energy: " << old_energy << " → " << new_energy
+              << "; ΔE = " << energy_difference << std::endl;
+
+    return energy_difference;
 }
 
-Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double> &dist) {
-    std::vector<double> coefficients = {dist(engine), dist(engine), dist(engine)};
-    PauliMatrices const &pauli_matrices = PauliMatrices::get_instance();
-    Matrix algebra_element;
-    for (int i = 0; i < 3; ++i) {
-        Matrix scaled_generator = coefficients[i] * pauli_matrices.get(i);
-        algebra_element += scaled_generator;
-    }
-
-    assert(is_hermitian(algebra_element));
-    assert(is_traceless(algebra_element));
-    return algebra_element;
-}
-
-Matrix group_from_algebra(Matrix const &algebra_element) {
-    Matrix const exponent = imag_unit * algebra_element;
-    Matrix const group_element = exponent.exp();
-    assert(is_unitary(group_element));
-    return group_element;
-}
-
-Matrix random_from_group(std::mt19937 &engine, std::normal_distribution<double> &dist) {
-    Matrix const algebra_element = random_from_algebra(engine, dist);
-    Matrix const group_element = group_from_algebra(algebra_element);
-    assert(is_unitary(group_element));
-    return group_element;
-}
-
-Configuration make_hot_start(int const length_space,
-                             int const length_time,
-                             double const std,
-                             int const seed) {
-    std::mt19937 engine(seed);
-    std::normal_distribution<double> dist(0, std);
-
-    Configuration links(length_space, length_time);
-    randomize_group(links, engine, dist);
-    return links;
-}
-
-void randomize_algebra(Configuration &config,
-                       std::mt19937 &engine,
-                       std::normal_distribution<double> &dist) {
-    for (int i = 0; i < config.get_size(); ++i) {
-        Matrix const next = random_from_algebra(engine, dist);
-        config[i] = next;
-    }
-}
-
-void randomize_group(Configuration &config,
-                     std::mt19937 &engine,
-                     std::normal_distribution<double> &dist) {
-    for (int i = 0; i < config.get_size(); ++i) {
-        Matrix const next = random_from_group(engine, dist);
-        config[i] = next;
-    }
-}
-
-void md_step(Configuration &links,
+void md_link_step(Configuration &links,
              Configuration &momenta,
-             Configuration &momenta_half,
              std::mt19937 &engine,
              std::normal_distribution<double> &dist,
              double const time_step,
              double const beta) {
-// Update `momenta_half`.
-#pragma omp parallel for
-    for (int n1 = 0; n1 < links.length_time; ++n1) {
-        for (int n2 = 0; n2 < links.length_space; ++n2) {
-            for (int n3 = 0; n3 < links.length_space; ++n3) {
-                for (int n4 = 0; n4 < links.length_space; ++n4) {
-                    for (int mu = 0; mu < 4; ++mu) {
-                        momenta_half(n1, n2, n3, n4, mu) = compute_new_momentum(
-                            n1, n2, n3, n4, mu, links, momenta, time_step, beta);
-                    }
-                }
-            }
-        }
-    }
-    // Update `links`.
     auto const links_old = links;
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
@@ -109,13 +53,21 @@ void md_step(Configuration &links,
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         links(n1, n2, n3, n4, mu) = compute_new_link(
-                            n1, n2, n3, n4, mu, links_old, momenta_half, time_step);
+                            n1, n2, n3, n4, mu, links_old, momenta, time_step);
                     }
                 }
             }
         }
     }
-// Update `momenta`.
+}
+
+void md_momentum_step(Configuration &links,
+                      Configuration &momenta,
+                      std::mt19937 &engine,
+                      std::normal_distribution<double> &dist,
+                      double const time_step,
+                      double const beta) {
+    auto const momenta_old = momenta;
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
@@ -123,7 +75,7 @@ void md_step(Configuration &links,
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         momenta(n1, n2, n3, n4, mu) = compute_new_momentum(
-                            n1, n2, n3, n4, mu, links, momenta_half, time_step, beta);
+                            n1, n2, n3, n4, mu, links, momenta_old, time_step, beta);
                     }
                 }
             }
@@ -144,8 +96,7 @@ Matrix compute_new_momentum(int const n1,
     Matrix result = momenta(n1, n2, n3, n4, mu);
     assert(is_traceless(result));
     assert(is_hermitian(result));
-    result +=
-        time_step / 2 * compute_momentum_derivative(n1, n2, n3, n4, mu, links, beta);
+    result += time_step * compute_momentum_derivative(n1, n2, n3, n4, mu, links, beta);
     assert(is_traceless(result));
     assert(is_hermitian(result));
     return result;
@@ -221,13 +172,13 @@ Matrix compute_momentum_derivative(int const n1,
 }
 
 Matrix compute_new_link(int const n1,
-                                  int const n2,
-                                  int const n3,
-                                  int const n4,
-                                  int const mu,
-                                  Configuration const &links,
-                                  Configuration const &momenta_half,
-                                  double const time_step) {
+                        int const n2,
+                        int const n3,
+                        int const n4,
+                        int const mu,
+                        Configuration const &links,
+                        Configuration const &momenta_half,
+                        double const time_step) {
     Matrix const exponent = imag_unit * time_step * momenta_half(n1, n2, n3, n4, mu);
     Matrix const rotation = exponent.exp();
     assert(is_unitary(rotation));

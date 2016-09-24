@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <unsupported/Eigen/MatrixFunctions>
+#include "matrix.hpp"
+#include "pauli-matrices.hpp"
 
 #include <cassert>
 #include <vector>
@@ -81,3 +82,27 @@ class Configuration {
         return index;
     }
 };
+
+void global_gauge_transformation(Matrix const &transformation, Configuration &links);
+
+/**
+  Creates a SU(2) random configuration.
+  */
+Configuration make_hot_start(int const length_space,
+                             int const length_time,
+                             double const std,
+                             int const seed);
+
+/**
+  Randomizes the whole lattice with su(2) matrices.
+  */
+void randomize_algebra(Configuration &configuration,
+                       std::mt19937 &engine,
+                       std::normal_distribution<double> &dist);
+
+/**
+  Randomizes the whole lattice with SU(2) matrices.
+  */
+void randomize_group(Configuration &configuration,
+                     std::mt19937 &engine,
+                     std::normal_distribution<double> &dist);

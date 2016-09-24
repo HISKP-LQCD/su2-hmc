@@ -9,44 +9,33 @@
 
 #include <random>
 
-void global_gauge_transformation(Matrix const &transformation, Configuration &links);
+double md_evolution(Configuration &links,
+                    std::mt19937 &engine,
+                    std::normal_distribution<double> &dist,
+                    double const time_step,
+                    int const md_steps,
+                    double const beta);
 
-Matrix random_from_algebra(std::mt19937 &engine, std::normal_distribution<double> &dist);
-Matrix random_from_group(std::mt19937 &engine, std::normal_distribution<double> &dist);
-Matrix group_from_algebra(Matrix const &algebra_element);
+void md_momentum_half_step(Configuration &links,
+                           Configuration &momenta,
+                           std::mt19937 &engine,
+                           std::normal_distribution<double> &dist,
+                           double const time_step,
+                           double const beta);
 
-/**
-  Creates a SU(2) random configuration.
-  */
-Configuration make_hot_start(int const length_space,
-                             int const length_time,
-                             double const std,
-                             int const seed);
+void md_link_step(Configuration &links,
+                  Configuration &momenta,
+                  std::mt19937 &engine,
+                  std::normal_distribution<double> &dist,
+                  double const time_step,
+                  double const beta);
 
-/**
-  Randomizes the whole lattice with su(2) matrices.
-  */
-void randomize_algebra(Configuration &configuration,
-                       std::mt19937 &engine,
-                       std::normal_distribution<double> &dist);
-
-/**
-  Randomizes the whole lattice with SU(2) matrices.
-  */
-void randomize_group(Configuration &configuration,
-                     std::mt19937 &engine,
-                     std::normal_distribution<double> &dist);
-
-/**
-  Perform a single molecular dynamics step.
-  */
-void md_step(Configuration &links,
-             Configuration &momenta,
-             Configuration &momenta_half,
-             std::mt19937 &engine,
-             std::normal_distribution<double> &dist,
-             double const time_step,
-             double const beta);
+void md_momentum_step(Configuration &links,
+                      Configuration &momenta,
+                      std::mt19937 &engine,
+                      std::normal_distribution<double> &dist,
+                      double const time_step,
+                      double const beta);
 
 /**
   Compute the new momentum half a timestep further.
