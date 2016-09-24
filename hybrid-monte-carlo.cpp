@@ -18,19 +18,17 @@ double md_evolution(Configuration &links,
                     int const md_steps,
                     double const beta) {
     Configuration momenta(links.length_space, links.length_time);
-    Configuration momenta_half(links.length_space, links.length_time);
-
     randomize_algebra(momenta, engine, dist);
 
     double const old_energy = get_energy(links, momenta, beta);
 
-    md_momentum_half_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-    md_link_step(links, momenta, momenta_half, engine, dist, time_step, beta);
+    md_momentum_step(links, momenta, engine, dist, time_step / 2, beta);
+    md_link_step(links, momenta, engine, dist, time_step, beta);
     for (int md_step_idx = 1; md_step_idx != md_steps; ++md_step_idx) {
-        md_momentum_step(links, momenta, momenta_half, engine, dist, time_step, beta);
-        md_link_step(links, momenta, momenta_half, engine, dist, time_step, beta);
+        md_momentum_step(links, momenta,engine, dist, time_step, beta);
+        md_link_step(links, momenta, engine, dist, time_step, beta);
     }
-    md_momentum_half_step(links, momenta, momenta_half, engine, dist, time_step, beta);
+    md_momentum_step(links, momenta, engine, dist, time_step / 2, beta);
 
     double const new_energy = get_energy(links, momenta, beta);
     double const energy_difference = new_energy - old_energy;
@@ -41,32 +39,8 @@ double md_evolution(Configuration &links,
     return energy_difference;
 }
 
-void md_momentum_half_step(Configuration &links,
-             Configuration &momenta,
-             Configuration &momenta_half,
-             std::mt19937 &engine,
-             std::normal_distribution<double> &dist,
-             double const time_step,
-             double const beta) {
-// Update `momenta_half`.
-#pragma omp parallel for
-    for (int n1 = 0; n1 < links.length_time; ++n1) {
-        for (int n2 = 0; n2 < links.length_space; ++n2) {
-            for (int n3 = 0; n3 < links.length_space; ++n3) {
-                for (int n4 = 0; n4 < links.length_space; ++n4) {
-                    for (int mu = 0; mu < 4; ++mu) {
-                        momenta_half(n1, n2, n3, n4, mu) = compute_new_momentum(
-                            n1, n2, n3, n4, mu, links, momenta, time_step / 2, beta);
-                    }
-                }
-            }
-        }
-    }
-}
-
 void md_link_step(Configuration &links,
              Configuration &momenta,
-             Configuration &momenta_half,
              std::mt19937 &engine,
              std::normal_distribution<double> &dist,
              double const time_step,
@@ -79,7 +53,7 @@ void md_link_step(Configuration &links,
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         links(n1, n2, n3, n4, mu) = compute_new_link(
-                            n1, n2, n3, n4, mu, links_old, momenta_half, time_step);
+                            n1, n2, n3, n4, mu, links_old, momenta, time_step);
                     }
                 }
             }
@@ -89,11 +63,11 @@ void md_link_step(Configuration &links,
 
 void md_momentum_step(Configuration &links,
                       Configuration &momenta,
-                      Configuration &momenta_half,
                       std::mt19937 &engine,
                       std::normal_distribution<double> &dist,
                       double const time_step,
                       double const beta) {
+    auto const momenta_old = momenta;
 #pragma omp parallel for
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
@@ -101,7 +75,7 @@ void md_momentum_step(Configuration &links,
                 for (int n4 = 0; n4 < links.length_space; ++n4) {
                     for (int mu = 0; mu < 4; ++mu) {
                         momenta(n1, n2, n3, n4, mu) = compute_new_momentum(
-                            n1, n2, n3, n4, mu, links, momenta_half, time_step, beta);
+                            n1, n2, n3, n4, mu, links, momenta_old, time_step, beta);
                     }
                 }
             }
@@ -198,13 +172,13 @@ Matrix compute_momentum_derivative(int const n1,
 }
 
 Matrix compute_new_link(int const n1,
-                                  int const n2,
-                                  int const n3,
-                                  int const n4,
-                                  int const mu,
-                                  Configuration const &links,
-                                  Configuration const &momenta_half,
-                                  double const time_step) {
+                        int const n2,
+                        int const n3,
+                        int const n4,
+                        int const mu,
+                        Configuration const &links,
+                        Configuration const &momenta_half,
+                        double const time_step) {
     Matrix const exponent = imag_unit * time_step * momenta_half(n1, n2, n3, n4, mu);
     Matrix const rotation = exponent.exp();
     assert(is_unitary(rotation));
