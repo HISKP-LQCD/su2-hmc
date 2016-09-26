@@ -5,3 +5,4 @@ build.ninja
 cmake_install.cmake
 rules.ninja
 su2-hmc
+analysis/__pycache__/
