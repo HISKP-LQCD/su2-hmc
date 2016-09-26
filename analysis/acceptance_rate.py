@@ -49,6 +49,9 @@ def main():
     pl.tight_layout()
     pl.savefig('acceptance-rate.pdf')
 
+    np.savetxt('acceptance-vs-time-step.tsv',
+               np.column_stack([steps_list, rate_val_list, rate_err_list]))
+
 
 
 
