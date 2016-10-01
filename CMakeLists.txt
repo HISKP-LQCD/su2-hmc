@@ -39,6 +39,9 @@ if(has_W_documentation)
     add_definitions("-Wdocumentation")
 endif()
 
+option(profiling "profiling" OFF)
+
+
 ###############################################################################
 #                                  Libraries                                  #
 ###############################################################################
@@ -83,3 +86,8 @@ add_executable(exporter
 target_link_libraries(su2-hmc ${Boost_LIBRARIES})
 
 add_subdirectory(tests)
+
+if(profiling)
+    add_definitions("-pg")
+    target_link_libraries(su2-hmc "-pg")
+endif()

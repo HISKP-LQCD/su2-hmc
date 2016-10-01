@@ -19,6 +19,8 @@ def main():
     steps_list = []
     rate_val_list = []
     rate_err_list = []
+    diff_val_list = []
+    diff_err_list = []
 
     for run in options.run:
         config = configparser.ConfigParser()
@@ -28,17 +30,18 @@ def main():
         steps = float(config['md']['time_step'])
 
         acceptance = np.loadtxt(os.path.join(run, 'accept.tsv'))
+        differences = np.loadtxt(os.path.join(run, 'boltzmann.tsv'))
 
         start = 30
-        values = acceptance[start:]
 
-        val, err = bootstrap.bootstrap_and_transform(np.mean, values)
-
-        print(steps, val, err)
+        acceptance_val, acceptance_err = bootstrap.bootstrap_and_transform(np.mean, acceptance[start:])
+        diff_val, diff_err = bootstrap.bootstrap_and_transform(np.mean, differences[start:])
 
         steps_list.append(steps)
-        rate_val_list.append(val)
-        rate_err_list.append(err)
+        rate_val_list.append(acceptance_val)
+        rate_err_list.append(acceptance_err)
+        diff_val_list.append(diff_val)
+        diff_err_list.append(diff_err)
 
     pl.errorbar(steps_list, rate_val_list, yerr=rate_err_list, marker='+', linestyle='none')
     pl.xscale('log')
@@ -49,8 +52,21 @@ def main():
     pl.tight_layout()
     pl.savefig('acceptance-rate.pdf')
 
+    pl.clf()
+    pl.errorbar(steps_list, diff_val_list, yerr=diff_err_list, marker='+', linestyle='none')
+    pl.xscale('log')
+    pl.yscale('log')
+    pl.xlabel(r'Time Step $\Delta \tau$ in Molecular Dynamics')
+    pl.ylabel(r'$\Delta H$')
+    pl.grid(True)
+    pl.margins(0.05)
+    pl.tight_layout()
+    pl.savefig('energy-difference.pdf')
+
     np.savetxt('acceptance-vs-time-step.tsv',
                np.column_stack([steps_list, rate_val_list, rate_err_list]))
+    np.savetxt('energy-difference-vs-time-step.tsv',
+               np.column_stack([steps_list, diff_val_list, diff_err_list]))
 
 
 
