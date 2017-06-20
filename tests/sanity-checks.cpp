@@ -1,4 +1,4 @@
-// Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
+// Copyright © 2016-2017 Martin Ueding <dev@martin-ueding.de>
 
 #include "../sanity-checks.hpp"
 
