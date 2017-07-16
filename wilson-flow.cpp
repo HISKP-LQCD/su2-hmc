@@ -42,7 +42,7 @@ Configuration get_global_stout_exponential(Configuration const &links) {
                 for (int n4 = 0; n4 < links.length_space; ++n4)
                     for (int mu = 0; mu < 4; ++mu) {
                         result(n1, n2, n3, n4, mu) =
-                            get_stout_exponential(n1, n2, n3, n4, mu, links);
+                            - get_stout_exponential(n1, n2, n3, n4, mu, links);
                     }
 
     return result;
