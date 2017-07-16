@@ -1,4 +1,4 @@
-// Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
+// Copyright © 2016-2017 Martin Ueding <dev@martin-ueding.de>
 
 #pragma once
 
@@ -82,6 +82,11 @@ class Configuration {
         return index;
     }
 };
+
+Configuration operator+(Configuration const &left, Configuration const &right);
+Configuration operator-(Configuration const &left, Configuration const &right);
+Configuration operator*(Configuration const &left, Configuration const &right);
+Configuration operator*(double const left, Configuration const &right);
 
 void global_gauge_transformation(Matrix const &transformation, Configuration &links);
 

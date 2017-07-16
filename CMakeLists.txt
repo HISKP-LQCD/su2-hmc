@@ -70,6 +70,7 @@ add_executable(su2-hmc
     main.cpp
     pauli-matrices.cpp
     sanity-checks.cpp
+    wilson-flow.cpp
 
     )
 

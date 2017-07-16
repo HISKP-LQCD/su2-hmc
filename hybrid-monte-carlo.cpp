@@ -1,4 +1,4 @@
-// Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
+// Copyright © 2016-2017 Martin Ueding <dev@martin-ueding.de>
 
 #include "hybrid-monte-carlo.hpp"
 
@@ -139,31 +139,28 @@ Matrix get_staples(int const n1,
     return staples;
 }
 
-Matrix compute_momentum_derivative(int const n1,
-                                             int const n2,
-                                             int const n3,
-                                             int const n4,
-                                             int const mu,
-                                             Configuration const &links,
-                                             double const beta) {
+Matrix get_stout_exponential(int const n1,
+                             int const n2,
+                             int const n3,
+                             int const n4,
+                             int const mu,
+                             Configuration const &links) {
     Matrix staples = get_staples(n1, n2, n3, n4, mu, links);
     Matrix const links_staples = links(n1, n2, n3, n4, mu) * staples;
     Matrix const minus_adjoint = links_staples - links_staples.adjoint().eval();
+    return minus_adjoint;
+}
+
+Matrix compute_momentum_derivative(int const n1,
+                                   int const n2,
+                                   int const n3,
+                                   int const n4,
+                                   int const mu,
+                                   Configuration const &links,
+                                   double const beta) {
+    auto minus_adjoint = get_stout_exponential(n1, n2, n3, n4, mu, links);
     Matrix const derivative =
         imag_unit * beta / static_cast<double>(number_of_colors) * minus_adjoint;
-
-#ifndef NDEBUG
-    if (!is_traceless(derivative)) {
-        std::cerr << "Momentum is not traceless!\n";
-        std::cerr << n1 << ", " << n2 << ", " << n3 << ", " << n4 << "; " << mu << "\n";
-        std::cerr << "UV:\n";
-        std::cerr << links_staples << "\n";
-        std::cerr << "UV - (UV)^\\dagger:\n";
-        std::cerr << minus_adjoint << "\n";
-        std::cerr << "\\dot H:\n";
-        std::cerr << derivative << std::endl;
-    }
-#endif
 
     assert(is_traceless(derivative));
     assert(is_hermitian(derivative));

@@ -1,4 +1,4 @@
-// Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
+// Copyright © 2016-2017 Martin Ueding <dev@martin-ueding.de>
 
 #include "configuration.hpp"
 
@@ -32,6 +32,73 @@ void global_gauge_transformation(Matrix const &transformation, Configuration &li
     }
 }
 
+Configuration operator+(Configuration const &left, Configuration const &right) {
+    assert(left.length_space == right.length_space);
+    assert(left.length_time == right.length_time);
+
+    Configuration result(right.length_space, right.length_time);
+#pragma omp parallel for reduction(+ : real, imag)
+    for (int n1 = 0; n1 < right.length_time; ++n1)
+        for (int n2 = 0; n2 < right.length_space; ++n2)
+            for (int n3 = 0; n3 < right.length_space; ++n3)
+                for (int n4 = 0; n4 < right.length_space; ++n4)
+                    for (int mu = 0; mu < 4; ++mu) {
+                        result(n1, n2, n3, n4, mu) =
+                            left(n1, n2, n3, n4, mu) + right(n1, n2, n3, n4, mu);
+                    }
+
+    return result;
+}
+
+Configuration operator-(Configuration const &left, Configuration const &right) {
+    assert(left.length_space == right.length_space);
+    assert(left.length_time == right.length_time);
+
+    Configuration result(right.length_space, right.length_time);
+#pragma omp parallel for reduction(+ : real, imag)
+    for (int n1 = 0; n1 < right.length_time; ++n1)
+        for (int n2 = 0; n2 < right.length_space; ++n2)
+            for (int n3 = 0; n3 < right.length_space; ++n3)
+                for (int n4 = 0; n4 < right.length_space; ++n4)
+                    for (int mu = 0; mu < 4; ++mu) {
+                        result(n1, n2, n3, n4, mu) =
+                            left(n1, n2, n3, n4, mu) - right(n1, n2, n3, n4, mu);
+                    }
+
+    return result;
+}
+
+Configuration operator*(Configuration const &left, Configuration const &right) {
+    assert(left.length_space == right.length_space);
+    assert(left.length_time == right.length_time);
+
+    Configuration result(right.length_space, right.length_time);
+#pragma omp parallel for reduction(+ : real, imag)
+    for (int n1 = 0; n1 < right.length_time; ++n1)
+        for (int n2 = 0; n2 < right.length_space; ++n2)
+            for (int n3 = 0; n3 < right.length_space; ++n3)
+                for (int n4 = 0; n4 < right.length_space; ++n4)
+                    for (int mu = 0; mu < 4; ++mu) {
+                        result(n1, n2, n3, n4, mu) =
+                            left(n1, n2, n3, n4, mu) * right(n1, n2, n3, n4, mu);
+                    }
+
+    return result;
+}
+
+Configuration operator*(double const left, Configuration const &right) {
+    Configuration result(right.length_space, right.length_time);
+#pragma omp parallel for reduction(+ : real, imag)
+    for (int n1 = 0; n1 < right.length_time; ++n1)
+        for (int n2 = 0; n2 < right.length_space; ++n2)
+            for (int n3 = 0; n3 < right.length_space; ++n3)
+                for (int n4 = 0; n4 < right.length_space; ++n4)
+                    for (int mu = 0; mu < 4; ++mu) {
+                        result(n1, n2, n3, n4, mu) = left * right(n1, n2, n3, n4, mu);
+                    }
+
+    return result;
+}
 
 Configuration make_hot_start(int const length_space,
                              int const length_time,

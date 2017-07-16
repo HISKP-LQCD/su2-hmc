@@ -1,4 +1,4 @@
-// Copyright © 2016 Martin Ueding <dev@martin-ueding.de>
+// Copyright © 2016-2017 Martin Ueding <dev@martin-ueding.de>
 
 /// \file
 
@@ -59,6 +59,13 @@ Matrix get_staples(int const n1,
                    int const n4,
                    int const mu,
                    Configuration const &links);
+
+Matrix get_stout_exponential(int const n1,
+                             int const n2,
+                             int const n3,
+                             int const n4,
+                             int const mu,
+                             Configuration const &links);
 
 Matrix compute_momentum_derivative(int const n1,
                                    int const n2,
