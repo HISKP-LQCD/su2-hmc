@@ -84,7 +84,19 @@ add_executable(exporter
 
     )
 
+add_executable(wflow
+
+    configuration.cpp
+    hybrid-monte-carlo.cpp
+    main-wflow.cpp
+    pauli-matrices.cpp
+    sanity-checks.cpp
+    wilson-flow.cpp
+
+    )
+
 target_link_libraries(su2-hmc ${Boost_LIBRARIES})
+target_link_libraries(wflow ${Boost_LIBRARIES})
 
 add_subdirectory(tests)
 

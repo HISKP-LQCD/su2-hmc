@@ -46,7 +46,7 @@ void md_link_step(Configuration &links,
              double const time_step,
              double const beta) {
     auto const links_old = links;
-#pragma omp parallel for
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -68,7 +68,7 @@ void md_momentum_step(Configuration &links,
                       double const time_step,
                       double const beta) {
     auto const momenta_old = momenta;
-#pragma omp parallel for
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -220,7 +220,7 @@ std::complex<double> get_plaquette_trace_sum(Configuration const &links) {
     double real = 0.0;
     double imag = 0.0;
 
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for reduction(+ : real, imag) collapse(4)
     for (int n1 = 0; n1 < links.length_time; ++n1) {
         for (int n2 = 0; n2 < links.length_space; ++n2) {
             for (int n3 = 0; n3 < links.length_space; ++n3) {
@@ -258,7 +258,7 @@ double get_link_energy(Configuration const &links, double const beta) {
 
 double get_momentum_energy(Configuration const &momenta, double const beta) {
     double momentum_part = 0.0;
-#pragma omp parallel for reduction(+ : momentum_part)
+#pragma omp parallel for reduction(+ : momentum_part) collapse(4)
     for (int n1 = 0; n1 < momenta.length_time; ++n1) {
         for (int n2 = 0; n2 < momenta.length_space; ++n2) {
             for (int n3 = 0; n3 < momenta.length_space; ++n3) {

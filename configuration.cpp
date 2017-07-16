@@ -37,7 +37,7 @@ Configuration operator+(Configuration const &left, Configuration const &right) {
     assert(left.length_time == right.length_time);
 
     Configuration result(right.length_space, right.length_time);
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < right.length_time; ++n1)
         for (int n2 = 0; n2 < right.length_space; ++n2)
             for (int n3 = 0; n3 < right.length_space; ++n3)
@@ -55,7 +55,7 @@ Configuration operator-(Configuration const &left, Configuration const &right) {
     assert(left.length_time == right.length_time);
 
     Configuration result(right.length_space, right.length_time);
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < right.length_time; ++n1)
         for (int n2 = 0; n2 < right.length_space; ++n2)
             for (int n3 = 0; n3 < right.length_space; ++n3)
@@ -73,7 +73,7 @@ Configuration operator*(Configuration const &left, Configuration const &right) {
     assert(left.length_time == right.length_time);
 
     Configuration result(right.length_space, right.length_time);
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < right.length_time; ++n1)
         for (int n2 = 0; n2 < right.length_space; ++n2)
             for (int n3 = 0; n3 < right.length_space; ++n3)
@@ -88,7 +88,7 @@ Configuration operator*(Configuration const &left, Configuration const &right) {
 
 Configuration operator*(double const left, Configuration const &right) {
     Configuration result(right.length_space, right.length_time);
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < right.length_time; ++n1)
         for (int n2 = 0; n2 < right.length_space; ++n2)
             for (int n3 = 0; n3 < right.length_space; ++n3)

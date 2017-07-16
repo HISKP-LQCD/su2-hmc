@@ -6,7 +6,7 @@
 
 Configuration exp(Configuration const &links) {
     Configuration result(links.length_space, links.length_time);
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < links.length_time; ++n1)
         for (int n2 = 0; n2 < links.length_space; ++n2)
             for (int n3 = 0; n3 < links.length_space; ++n3)
@@ -35,7 +35,7 @@ Configuration flow_step(Configuration const &initial, double const time_step) {
 
 Configuration get_global_stout_exponential(Configuration const &links) {
     Configuration result(links.length_space, links.length_time);
-#pragma omp parallel for reduction(+ : real, imag)
+#pragma omp parallel for collapse(4)
     for (int n1 = 0; n1 < links.length_time; ++n1)
         for (int n2 = 0; n2 < links.length_space; ++n2)
             for (int n3 = 0; n3 < links.length_space; ++n3)
