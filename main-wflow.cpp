@@ -1,6 +1,7 @@
 // Copyright © 2017 Martin Ueding <dev@martin-ueding.de>
 
 #include "wilson-flow.hpp"
+#include "hybrid-monte-carlo.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -30,15 +31,34 @@ int main(int const argc, char const **argv) {
     Configuration initial(length_space, length_time);
     initial.load(path_in);
 
+    auto const plaquette_initial = get_plaquette_trace_average(initial);
+    std::cout << "Initial plaquette: " << plaquette_initial.real() << std::endl;
+
     Configuration flowed = initial;
 
-    std::cout << "Flow step" << std::endl;
+    int const column_width = 15;
+
+    std::cout << std::setw(column_width) << "Flow step" << std::setw(column_width) << "Plaquette" << std::endl;
     for (int integration_step = 0;
          integration_step < integration_steps; ++integration_step) {
-        std::cout << "  " << std::setw(5) << integration_step << std::endl;
+
 
         flowed = flow_step(flowed, time_step);
+
+        auto const plaquette = get_plaquette_trace_average(flowed);
+
+        std::cout << std::setw(column_width) << integration_step
+                  << std::setw(column_width) << plaquette.real() << std::endl;
     }
+
+    flowed(0, 0, 0, 0, 0)(0, 0).real(1.0);
+    flowed(0, 0, 0, 0, 0)(0, 0).imag(1.5);
+    flowed(0, 0, 0, 0, 0)(1, 0).real(2.0);
+    flowed(0, 0, 0, 0, 0)(1, 0).imag(2.5);
+    flowed(0, 0, 0, 0, 0)(0, 1).real(3.0);
+    flowed(0, 0, 0, 0, 0)(0, 1).imag(3.5);
+    flowed(0, 0, 0, 0, 0)(1, 1).real(4.0);
+    flowed(0, 0, 0, 0, 0)(1, 1).imag(4.5);
 
     flowed.save(path_out);
 }
