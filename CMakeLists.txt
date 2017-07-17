@@ -95,6 +95,17 @@ add_executable(wflow
 
     )
 
+add_executable(test
+
+    configuration.cpp
+    hybrid-monte-carlo.cpp
+    main-test.cpp
+    pauli-matrices.cpp
+    sanity-checks.cpp
+    wilson-flow.cpp
+
+    )
+
 target_link_libraries(su2-hmc ${Boost_LIBRARIES})
 target_link_libraries(wflow ${Boost_LIBRARIES})
 

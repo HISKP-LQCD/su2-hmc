@@ -8,9 +8,8 @@
 #include <string>
 
 int main(int const argc, char const **argv) {
-
     if (argc != 7) {
-        std::cout << "Please supply five arguments:\n"
+        std::cout << "Please supply six arguments:\n"
                      "- Lattice extent in space [int]\n"
                      "- Lattice extent in time [int]\n"
                      "- Input path [string]\n"
