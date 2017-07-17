@@ -21,7 +21,7 @@ void Configuration::save(std::string const &path) const {
 }
 
 void Configuration::load(std::string const &path) {
-    std::ifstream ifs(path, std::ios::out | std::ios::binary);
+    std::ifstream ifs(path, std::ios::in | std::ios::binary);
     ifs.read(reinterpret_cast<char *>(data.data()), storage_size());
 }
 
