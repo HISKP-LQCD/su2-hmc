@@ -7,16 +7,14 @@
 #include <stdexcept>
 
 namespace {
-    void read_test(Configuration &cfg, std::string const &path) {
-        cfg.load(path);
-
+    void check_config(Configuration &cfg) {
         for (int n1 = 0; n1 < cfg.length_time; ++n1)
             for (int n2 = 0; n2 < cfg.length_space; ++n2)
                 for (int n3 = 0; n3 < cfg.length_space; ++n3)
                     for (int n4 = 0; n4 < cfg.length_space; ++n4) {
                         int coords[] = {n1, n2, n3, n4};
                         for (int mu = 0; mu < 4; ++mu) {
-                            double const actual = cfg(n1, n2, n3, n4, mu)(0, 0).real();
+                            auto const actual = cfg(n1, n2, n3, n4, mu)(0, 0).real();
                             double const expected = coords[mu];
                             if (fabs(actual - expected) > 1e-10) {
                                 std::cout << "cfg(t=" << n1 << ", x=" << n2
@@ -26,6 +24,11 @@ namespace {
                             }
                         }
                     }
+    }
+
+    void read_test(Configuration &cfg, std::string const &path) {
+        cfg.load(path);
+        check_config(cfg);
     }
 
     void write_test(Configuration &cfg, std::string const &path) {
@@ -40,6 +43,7 @@ namespace {
                         }
                     }
 
+        check_config(cfg);
         cfg.save(path);
     }
 }
